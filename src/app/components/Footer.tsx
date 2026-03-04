@@ -105,7 +105,7 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-slate-800 text-center">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} Department of Aeronautical Engineering. All rights reserved.
+            © {new Date().getFullYear()} Department of Aeronautical Engineering. All rights reserved. Developed by Makrant Kamble
           </p>
         </div>
       </div>
