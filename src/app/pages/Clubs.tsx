@@ -6,18 +6,18 @@ import { Plane, Users, Rocket, Trophy } from 'lucide-react';
 export function Clubs() {
   const projects = [
     {
-      title: 'Solid Rocket model',
-      description: 'Development of Solid Rocket Model',
+      title: 'Drone Assembly',
+      description: 'Completion of Sucessful Drone workshop ',
       image: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=800&q=80',
     },
     {
-      title: 'RC Plane',
-      description: 'Design and Sucessful Model of RC Plane',
+      title: 'Solid Rocket model',
+      description: 'Development of Solid Rocket Model',
       image: 'https://images.unsplash.com/photo-1581822261290-991b38693d1b?w=800&q=80',
     },
     {
       title: 'Aircraft Design Competition',
-      description: 'Winner of National Aero Design Competition 2025',
+      description: 'Participants of National Aero Design Competition 2026',
       image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800&q=80',
     },
   ];
