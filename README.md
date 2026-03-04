@@ -1,7 +1,7 @@
 
-  # Website Builder
+  # AeroTGP
 
-  This is a code bundle for Website Builder. The original project is available at https://www.figma.com/design/bVP5G5naGR0EaBQVJ0Cdoy/Website-Builder.
+  This is a code bundle for AeroTGP. The original project is available at https://www.figma.com/design/bVP5G5naGR0EaBQVJ0Cdoy/AeroTGP.
 
   ## Running the code
 

@@ -41,7 +41,7 @@ export function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <Plane className="w-8 h-8 text-blue-500" />
-            <span className="text-xl font-bold">Aero Dept</span>
+            <span className="text-xl font-bold">AeroTGP</span>
           </Link>
 
           {/* Desktop Navigation */}
