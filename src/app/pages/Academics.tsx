@@ -1,0 +1,227 @@
+import { motion } from 'motion/react';
+import { Card, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Download, BookOpen, Calendar } from 'lucide-react';
+
+export function Academics() {
+  const courses = [
+    {
+      name: 'B.Tech in Aeronautical Engineering',
+      duration: '4 Years',
+      description: 'Comprehensive undergraduate program covering all aspects of aeronautical engineering',
+    },
+    {
+      name: 'M.Tech in Aerospace Engineering',
+      duration: '2 Years',
+      description: 'Advanced postgraduate studies with specializations in various aerospace domains',
+    },
+    {
+      name: 'Ph.D. in Aerospace Sciences',
+      duration: '3-5 Years',
+      description: 'Research-focused doctoral program in cutting-edge aerospace technologies',
+    },
+  ];
+
+  const semesters = [
+    {
+      sem: 'Semester 1-2',
+      subjects: [
+          'Linear Algebra and Calculus',
+        'Chemical Process in Engineering',
+        'Engineering Mechanics',
+        'Chemical Process in Engineering-Lab',
+        'IDEA-Lab & Engineering Workshop',
+        'Environment Sustainability -Lab',
+        'Fundamentals of Computer-Lab',
+        'Social Internship',
+        'Basics of Aircraft Design-Lab/CNC Machine and Programing-Lab/Building Maintenance -Lab',
+        'Liberal Learning Module-I',
+        'Differential Equation and Statistics',
+        'Solid State Physics & Optics',
+        'Solid State Physics & Optics-Lab',
+        'Principle of Electrical Engineering',
+        'Principle of Electrical Engineering -Lab',
+        'Engineering & Computer Graphics',
+        'Computer Aided Drawing-Lab',
+        'C-Language-Lab',
+        'Professional Etiquette',
+        'Digital Wellness & Basic Communication Lab',
+        'Liberal Learning Module-II',
+      ],
+    },
+    {
+      sem: 'Semester 3-4',
+      subjects: [
+        'Fluid Mechanics & Machinery',
+        'Solid Mechanics',
+        'Introduction to Aeronautical Engineering',
+        'Engineering Economics for Managers',
+        'Advance Mathematics',
+        'Fluid Mechanics & Machinery Lab',
+        'Solid Mechanics Lab',
+        'Community Engineering Project',
+        'Fundamentals of Thermodynamics',
+        'Aerodynamics I',
+        'Aerospace Materials',
+        'Fundamentals of Thermodynamics Lab',
+        'Aero Modeling Lab',
+        'Computer Aided Drafting Lab',
+        'Industrial Management',
+        'Leadership and Team Dynamics',
+        'Advance Manufacturing Technology',
+      ],
+    },
+    {
+      sem: 'Semester 5-6',
+      subjects: [
+        'Mechanics of Machines ',
+        'Aircraft Propulsion ',
+        'Flight Mechanics',
+        'Aircraft Design',
+        'Control Systems',
+        'Avionics',
+      ],
+    },
+    {
+      sem: 'Semester 7-8',
+      subjects: [
+        'Composite Materials',
+        'Computational Fluid Dynamics',
+        'Rocket Propulsion',
+        'Space Mechanics',
+        'Electives',
+        'Final Year Project',
+      ],
+    },
+  ];
+
+  const events = [
+    { date: 'Jan 2026', event: 'Semester Begins' },
+    { date: 'Mar 2026', event: 'Mid-Semester Exams' },
+    { date: 'May 2026', event: 'End-Semester Exams' },
+    { date: 'Jun-Jul 2026', event: 'Summer Break' },
+    { date: 'Aug 2026', event: 'New Academic Year' },
+  ];
+
+  return (
+    <div className="min-h-screen pt-24 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-16"
+        >
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            Academics
+          </h1>
+          <p className="text-xl text-gray-400">
+            Comprehensive curriculum designed for excellence in aerospace engineering
+          </p>
+        </motion.div>
+
+        {/* Courses Offered */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <h2 className="text-3xl font-bold mb-8">Courses Offered</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {courses.map((course, index) => (
+              <motion.div
+                key={course.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 hover:border-blue-500 transition-all duration-300 h-full">
+                  <CardContent className="p-6">
+                    <BookOpen className="w-12 h-12 text-blue-500 mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">{course.name}</h3>
+                    <p className="text-blue-400 text-sm mb-3">Duration: {course.duration}</p>
+                    <p className="text-gray-400 text-sm">{course.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Semester-wise Subjects */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">Curriculum Structure</h2>
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Download Syllabus
+            </Button>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {semesters.map((semester, index) => (
+              <motion.div
+                key={semester.sem}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-blue-400">{semester.sem}</h3>
+                    <ul className="space-y-2">
+                      {semester.subjects.map((subject) => (
+                        <li key={subject} className="flex items-start space-x-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                          <span className="text-gray-400 text-sm">{subject}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Academic Calendar */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-3xl font-bold mb-8">Academic Calendar 2026</h2>
+          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+            <CardContent className="p-8">
+              <div className="space-y-4">
+                {events.map((item, index) => (
+                  <motion.div
+                    key={item.event}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center space-x-4 p-4 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors"
+                  >
+                    <Calendar className="w-8 h-8 text-blue-500 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-semibold">{item.event}</div>
+                      <div className="text-sm text-gray-400">{item.date}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
