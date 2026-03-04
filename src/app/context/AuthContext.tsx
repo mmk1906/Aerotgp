@@ -29,11 +29,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     // Mock authentication
-    if (email === 'admin@aero.edu' && password === 'admin123') {
+    if (email === 'admin@aerotgp' && password === 'admin123') {
       const adminUser = {
         id: '1',
         name: 'Admin User',
-        email: 'admin@aero.edu',
+        email: 'admin@aerotgp',
         role: 'admin' as const,
       };
       setUser(adminUser);
