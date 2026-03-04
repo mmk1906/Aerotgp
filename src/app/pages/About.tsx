@@ -88,28 +88,28 @@ export function About() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Wind Tunnel Facility',
-                description: 'Subsonic and supersonic wind tunnels for aerodynamic testing',
+                title: 'Aero-Thermodynamics Lab',
+                description: 'Study of Heat',
                 icon: Beaker,
               },
               {
-                title: 'Flight Simulator',
-                description: 'Advanced flight simulation systems for pilot training',
+                title: 'Fluid Mechanics and Machinery Lab',
+                description: 'Advance Study of Fluid for Aeronautics',
                 icon: Target,
               },
               {
                 title: 'Propulsion Lab',
-                description: 'State-of-the-art facilities for engine testing and research',
+                description: 'Study of Solid and liquid Fuels',
                 icon: Award,
               },
               {
-                title: 'Structures Lab',
+                title: 'Aircraft Structures Lab',
                 description: 'Testing facilities for aircraft materials and structures',
                 icon: Beaker,
               },
               {
-                title: 'Avionics Lab',
-                description: 'Modern avionics systems and instrumentation',
+                title: 'Aerodynamics Lab',
+                description: 'Subsonic and supersonic wind tunnels for aerodynamic testing',
                 icon: Target,
               },
               {
