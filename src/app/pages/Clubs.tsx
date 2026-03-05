@@ -124,7 +124,7 @@ export function Clubs() {
                         project.title === 'Drone Assembly' 
                           ? 'https://images.unsplash.com/photo-1767448068187-5be3cbc848c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcm9uZSUyMGFzc2VtYmx5JTIwd29ya3Nob3B8ZW58MXx8fHwxNzcyNzI2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080'
                           : project.title === 'Solid Rocket model'
-                          ? 'https://images.unsplash.com/photo-1719947695481-7978aba9d864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2NrZXQlMjBlbmdpbmUlMjBtb2RlbHxlbnwxfHx8fDE3NzI3MjY1MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080'
+                          ? 'https://plus.unsplash.com/premium_photo-1733666502205-9e7d49958672?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c29saWQlMjByb2NrZXR8ZW58MHx8MHx8fDA%3D'
                           : project.title === 'Aircraft Design Competition'
                           ? 'https://images.unsplash.com/photo-1735081011442-66c6db9e2570?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhaXJjcmFmdCUyMGRlc2lnbiUyMGNvbXBldGl0aW9ufGVufDF8fHx8MTc3MjcyNjUwMnww&ixlib=rb-4.1.0&q=80&w=1080'
                           : project.image
