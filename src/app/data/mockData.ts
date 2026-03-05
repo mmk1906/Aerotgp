@@ -38,7 +38,7 @@ export const mockEvents: Event[] = [
   {
     id: '1',
     title: 'Cadthon',
-    description: 'Learn the fundamentals of UAV design and build your own drone. Hands-on workshop with industry experts.',
+    description: 'Cad Design Competion',
     date: '2026-03-16',
     venue: 'Cad Lab',
     isPaid: true,
@@ -52,7 +52,7 @@ export const mockEvents: Event[] = [
   {
     id: '2',
     title: 'Aero Modelling',
-    description: 'Annual symposium featuring presentations on cutting-edge research in aerodynamics and fluid mechanics.',
+    description: 'RC Plane and Drone Flying Competition',
     date: '2026-04-17',
     venue: 'Campus Ground',
     isPaid: false,
@@ -65,7 +65,7 @@ export const mockEvents: Event[] = [
   {
     id: '3',
     title: 'Slide war',
-    description: 'Practical session on wind tunnel testing techniques. Limited seats available.',
+    description: 'PPT Presentation Competition',
     date: '2026-03-17',
     venue: 'Smart Class',
     isPaid: true,
@@ -79,7 +79,7 @@ export const mockEvents: Event[] = [
   {
     id: '4',
     title: 'E-Sports',
-    description: 'Design a space mission and compete for prizes. Open to all students.',
+    description: 'BGMI & Free Fire Gaming Competition',
     date: '2026-04-17',
     venue: 'Smart Class',
     isPaid: false,
