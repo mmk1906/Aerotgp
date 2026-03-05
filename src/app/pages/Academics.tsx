@@ -25,6 +25,16 @@ export function Academics() {
       duration: '2 Years',
       description: 'Advanced postgraduate studies with specializations in various aerospace domains',
     },
+    {
+      name: 'Ph.D in Aerospace Engineering',
+      duration: '3-5 Years',
+      description: 'Doctoral research program focusing on advanced aerospace research and innovation',
+    },
+    {
+      name: 'Diploma in Aeronautical Engineering',
+      duration: '3 Years',
+      description: 'Technical diploma program providing foundational skills in aircraft maintenance and design',
+    },
   ];
 
   const semesters = [

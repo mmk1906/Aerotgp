@@ -10,6 +10,9 @@ import { Events } from './pages/Events';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { JoinAeroClub } from './pages/JoinAeroClub';
+import { Blogs } from './pages/Blogs';
+import { BlogCreate } from './pages/BlogCreate';
+import { BlogView } from './pages/BlogView';
 
 export const router = createBrowserRouter([
   {
@@ -23,6 +26,10 @@ export const router = createBrowserRouter([
       { path: 'academics', Component: Academics },
       { path: 'contact', Component: Contact },
       { path: 'events', Component: Events },
+      { path: 'blogs', Component: Blogs },
+      { path: 'blogs/create', Component: BlogCreate },
+      { path: 'blogs/edit/:id', Component: BlogCreate },
+      { path: 'blogs/:id', Component: BlogView },
       { path: 'login', Component: Login },
       { path: 'admin', Component: AdminDashboard },
       { path: 'join-aero-club', Component: JoinAeroClub },

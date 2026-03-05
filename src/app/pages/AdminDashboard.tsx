@@ -16,6 +16,7 @@ import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, 
 import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
+import { BlogManagementTab } from '../components/BlogManagementTab';
 
 interface AeroClubApplication {
   id: string;
@@ -211,6 +212,7 @@ export function AdminDashboard() {
             <TabsTrigger value="events">Event Management</TabsTrigger>
             <TabsTrigger value="registrations">Registrations</TabsTrigger>
             <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
+            <TabsTrigger value="blogs">Blog Management</TabsTrigger>
             <TabsTrigger value="applications">
               Club Applications
               {stats.pendingApplications > 0 && (
@@ -507,6 +509,10 @@ export function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="blogs">
+            <BlogManagementTab />
           </TabsContent>
 
           <TabsContent value="applications">
