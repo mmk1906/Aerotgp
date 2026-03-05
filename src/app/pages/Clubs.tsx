@@ -120,7 +120,15 @@ export function Clubs() {
                 <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 h-full">
                   <div className="relative h-48">
                     <img
-                      src={project.image}
+                      src={
+                        project.title === 'Drone Assembly' 
+                          ? 'https://images.unsplash.com/photo-1767448068187-5be3cbc848c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcm9uZSUyMGFzc2VtYmx5JTIwd29ya3Nob3B8ZW58MXx8fHwxNzcyNzI2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080'
+                          : project.title === 'Solid Rocket model'
+                          ? 'https://images.unsplash.com/photo-1719947695481-7978aba9d864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2NrZXQlMjBlbmdpbmUlMjBtb2RlbHxlbnwxfHx8fDE3NzI3MjY1MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080'
+                          : project.title === 'Aircraft Design Competition'
+                          ? 'https://images.unsplash.com/photo-1735081011442-66c6db9e2570?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhaXJjcmFmdCUyMGRlc2lnbiUyMGNvbXBldGl0aW9ufGVufDF8fHx8MTc3MjcyNjUwMnww&ixlib=rb-4.1.0&q=80&w=1080'
+                          : project.image
+                      }
                       alt={project.title}
                       className="w-full h-full object-cover"
                     />

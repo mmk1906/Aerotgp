@@ -83,7 +83,17 @@ export function Events() {
               <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 h-full flex flex-col">
                 <div className="relative h-48">
                   <img
-                    src={event.image}
+                    src={
+                      event.title === 'Cadthon'
+                        ? 'https://images.unsplash.com/photo-1581094485546-7910e5a5a599?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDQUQlMjBkZXNpZ24lMjBjb21wZXRpdGlvbiUyMGVuZ2luZWVyaW5nfGVufDF8fHx8MTc3MjcyNzAyN3ww&ixlib=rb-4.1.0&q=80&w=1080'
+                        : event.title === 'Aero Modelling'
+                        ? 'https://images.unsplash.com/photo-1735081011574-cac2f06771ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZXJvJTIwbW9kZWxpbmclMjBhaXJjcmFmdHxlbnwxfHx8fDE3NzI3MjcwMjd8MA&ixlib=rb-4.1.0&q=80&w=1080'
+                        : event.title === 'Slide war'
+                        ? 'https://images.unsplash.com/photo-1733222765056-b0790217baa9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcmVzZW50YXRpb24lMjBzbGlkZXNob3clMjBjb21wZXRpdGlvbnxlbnwxfHx8fDE3NzI3MjcwMjh8MA&ixlib=rb-4.1.0&q=80&w=1080'
+                        : event.title === 'E-Sports'
+                        ? 'https://images.unsplash.com/photo-1772587003187-65b32c91df91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlc3BvcnRzJTIwZ2FtaW5nJTIwY29tcGV0aXRpb258ZW58MXx8fHwxNzcyNjQzNDIzfDA&ixlib=rb-4.1.0&q=80&w=1080'
+                        : event.image
+                    }
                     alt={event.title}
                     className="w-full h-full object-cover"
                   />
