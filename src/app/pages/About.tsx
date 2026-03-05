@@ -160,9 +160,9 @@ export function About() {
                 <li className="flex items-start space-x-3">
                   <Award className="w-6 h-6 text-blue-500 flex-shrink-0 mt-1" />
                   <div>
-                    <h4 className="font-semibold mb-1">International Research Collaboration</h4>
+                    <h4 className="font-semibold mb-1">Industrial Vist to ISRO</h4>
                     <p className="text-gray-400 text-sm">
-                      Partnership with NASA and ESA for joint research projects in aerospace technology
+                      Student's had a Industrial Vist to ISRO Banglore
                     </p>
                   </div>
                 </li>
@@ -171,7 +171,7 @@ export function About() {
                   <div>
                     <h4 className="font-semibold mb-1">Student Achievement</h4>
                     <p className="text-gray-400 text-sm">
-                      Our students have won multiple national and international UAV design competitions
+                      Our students have won multiple national  UAV design competitions
                     </p>
                   </div>
                 </li>
