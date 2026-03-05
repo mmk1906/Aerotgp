@@ -85,7 +85,7 @@ export function Events() {
                   <img
                     src={
                       event.title === 'Cadthon'
-                        ? 'https://images.unsplash.com/photo-1581094485546-7910e5a5a599?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDQUQlMjBkZXNpZ24lMjBjb21wZXRpdGlvbiUyMGVuZ2luZWVyaW5nfGVufDF8fHx8MTc3MjcyNzAyN3ww&ixlib=rb-4.1.0&q=80&w=1080'
+                        ? 'https://images.unsplash.com/photo-1600869009498-8d429f88d4f5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FkfGVufDB8fDB8fHww'
                         : event.title === 'Aero Modelling'
                         ? 'https://images.unsplash.com/photo-1735081011574-cac2f06771ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhZXJvJTIwbW9kZWxpbmclMjBhaXJjcmFmdHxlbnwxfHx8fDE3NzI3MjcwMjd8MA&ixlib=rb-4.1.0&q=80&w=1080'
                         : event.title === 'Slide war'
