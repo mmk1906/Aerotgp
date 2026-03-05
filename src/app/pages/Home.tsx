@@ -101,34 +101,7 @@ export function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="relative py-20 bg-gradient-to-b from-[#0a0e1a] to-[#0f172a]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { icon: Users, label: 'Students', value: stats.students },
-              { icon: Award, label: 'Faculty', value: stats.faculty },
-              { icon: Rocket, label: 'Projects', value: stats.projects },
-              { icon: Calendar, label: 'Events', value: stats.events },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 text-center">
-                  <CardContent className="pt-6">
-                    <stat.icon className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-                    
-                    <div className="text-gray-400">{stat.label}</div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* Highlights Section */}
       <section className="relative py-20 bg-[#0f172a]">
