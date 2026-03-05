@@ -2,8 +2,10 @@ import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Plane, Users, Rocket, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 export function Clubs() {
+  const navigate = useNavigate();
   const projects = [
     {
       title: 'Drone Assembly',
@@ -84,7 +86,7 @@ export function Clubs() {
                       </div>
                     </div>
                   </div>
-                  <Button size="lg">
+                  <Button size="lg" onClick={() => navigate('/join-aero-club')}>
                     Join Aero Club <Rocket className="ml-2 w-5 h-5" />
                   </Button>
                 </div>
@@ -122,11 +124,11 @@ export function Clubs() {
                     <img
                       src={
                         project.title === 'Drone Assembly' 
-                          ? 'https://images.unsplash.com/photo-1767448068187-5be3cbc848c7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcm9uZSUyMGFzc2VtYmx5JTIwd29ya3Nob3B8ZW58MXx8fHwxNzcyNzI2NTAxfDA&ixlib=rb-4.1.0&q=80&w=1080'
+                          ? 'https://media.istockphoto.com/id/1352073818/photo/close-up-shot-of-hands-instalilng-propeller-to-quadcopter-concept-of-drone-assemble-and.webp?a=1&b=1&s=612x612&w=0&k=20&c=qhjZFW4qk97BhJo5M0B1VuQ_MpFNVdgs8M14hO362yM='
                           : project.title === 'Solid Rocket model'
-                          ? 'https://plus.unsplash.com/premium_photo-1733666502205-9e7d49958672?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c29saWQlMjByb2NrZXR8ZW58MHx8MHx8fDA%3D'
+                          ? 'https://media.istockphoto.com/id/544969326/photo/space-launch-system-solid-rocket-boosters-separation.webp?a=1&b=1&s=612x612&w=0&k=20&c=GSpGqT96k6q6N_0YHvm8BdDaa-X_vm1GfA51TgdA7iQ='
                           : project.title === 'Aircraft Design Competition'
-                          ? 'https://images.unsplash.com/photo-1735081011442-66c6db9e2570?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhaXJjcmFmdCUyMGRlc2lnbiUyMGNvbXBldGl0aW9ufGVufDF8fHx8MTc3MjcyNjUwMnww&ixlib=rb-4.1.0&q=80&w=1080'
+                          ? 'https://media.istockphoto.com/id/526308985/photo/airplane.webp?a=1&b=1&s=612x612&w=0&k=20&c=uLtR6TBiYBATJJNGgzbIuB4RnhzpNA_F1VIj4zs2o7I='
                           : project.image
                       }
                       alt={project.title}

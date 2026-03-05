@@ -9,6 +9,7 @@ import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { JoinAeroClub } from './pages/JoinAeroClub';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
       { path: 'events', Component: Events },
       { path: 'login', Component: Login },
       { path: 'admin', Component: AdminDashboard },
+      { path: 'join-aero-club', Component: JoinAeroClub },
     ],
   },
 ]);

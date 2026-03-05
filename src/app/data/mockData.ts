@@ -158,7 +158,7 @@ export const mockFaculty: Faculty[] = [
     qualification: 'B.E. (ME ) M.Tech (AE)',
     specialization: '--',
     email: 'himani.aeronautical@tgpcet.com',
-    photo: '',
+    photo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQL_20I4YcYjFsX-d95KIJw90lAt6fCEalaAA&s',
   },
   {
     id: 'f6',

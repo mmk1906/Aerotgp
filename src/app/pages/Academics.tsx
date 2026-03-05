@@ -1,9 +1,19 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Download, BookOpen, Calendar } from 'lucide-react';
+import { Download, BookOpen, Calendar, Clock, Award, Play, Lock } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
+import { MCQTest, Quiz } from '../components/MCQTest';
+import { mockQuizzes } from '../data/quizData';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
+import { toast } from 'sonner';
 
 export function Academics() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const courses = [
     {
       name: 'B.Tech in Aeronautical Engineering',
@@ -14,11 +24,6 @@ export function Academics() {
       name: 'M.Tech in Aerospace Engineering',
       duration: '2 Years',
       description: 'Advanced postgraduate studies with specializations in various aerospace domains',
-    },
-    {
-      name: 'Ph.D. in Aerospace Sciences',
-      duration: '3-5 Years',
-      description: 'Research-focused doctoral program in cutting-edge aerospace technologies',
     },
   ];
 
@@ -102,6 +107,58 @@ export function Academics() {
     { date: 'Jun-Jul 2026', event: 'Summer Break' },
     { date: 'Aug 2026', event: 'New Academic Year' },
   ];
+
+  const handleStartTest = (quiz: Quiz) => {
+    if (!user) {
+      toast.error('Please login to take tests');
+      navigate('/login');
+      return;
+    }
+
+    // Check if user has already attempted this quiz
+    const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
+    const userAttempts = attempts.filter(
+      (a: any) => a.quizId === quiz.id && a.studentEmail === user.email
+    );
+
+    if (userAttempts.length > 0 && !quiz.allowMultipleAttempts) {
+      toast.error('You have already attempted this test');
+      return;
+    }
+
+    setSelectedQuiz(quiz);
+  };
+
+  const handleTestComplete = (score: number) => {
+    // Test completion is handled in the MCQTest component
+  };
+
+  const handleCancelTest = () => {
+    setSelectedQuiz(null);
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Easy':
+        return 'bg-green-600';
+      case 'Medium':
+        return 'bg-yellow-600';
+      case 'Hard':
+        return 'bg-red-600';
+      default:
+        return 'bg-gray-600';
+    }
+  };
+
+  if (selectedQuiz) {
+    return (
+      <MCQTest
+        quiz={selectedQuiz}
+        onComplete={handleTestComplete}
+        onCancel={handleCancelTest}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -188,6 +245,93 @@ export function Academics() {
                 </Card>
               </motion.div>
             ))}
+          </div>
+        </motion.div>
+
+        {/* Online MCQ Tests */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Online MCQ Tests
+            </h2>
+            <p className="text-gray-400">
+              Test your knowledge with our comprehensive quizzes on various aerospace subjects
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockQuizzes.map((quiz, index) => {
+              const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
+              const userAttempts = attempts.filter(
+                (a: any) => a.quizId === quiz.id && a.studentEmail === user?.email
+              );
+              const hasAttempted = userAttempts.length > 0;
+              const bestScore = hasAttempted
+                ? Math.max(...userAttempts.map((a: any) => a.score))
+                : null;
+
+              return (
+                <motion.div
+                  key={quiz.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 hover:border-blue-500 transition-all duration-300 h-full flex flex-col">
+                    <CardContent className="p-6 flex-1 flex flex-col">
+                      <div className="flex items-start justify-between mb-3">
+                        <BookOpen className="w-10 h-10 text-blue-500" />
+                        <Badge className={getDifficultyColor(quiz.difficulty)}>
+                          {quiz.difficulty}
+                        </Badge>
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">{quiz.title}</h3>
+                      <p className="text-sm text-gray-400 mb-4 flex-1">
+                        {quiz.description}
+                      </p>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center text-sm text-gray-400">
+                          <BookOpen className="w-4 h-4 mr-2" />
+                          {quiz.questions.length} Questions
+                        </div>
+                        <div className="flex items-center text-sm text-gray-400">
+                          <Clock className="w-4 h-4 mr-2" />
+                          {quiz.timeLimit} Minutes
+                        </div>
+                        {hasAttempted && bestScore !== null && (
+                          <div className="flex items-center text-sm text-green-400">
+                            <Award className="w-4 h-4 mr-2" />
+                            Best Score: {bestScore.toFixed(1)}%
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleStartTest(quiz)}
+                        disabled={hasAttempted && !quiz.allowMultipleAttempts}
+                      >
+                        {hasAttempted && !quiz.allowMultipleAttempts ? (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Already Attempted
+                          </>
+                        ) : (
+                          <>
+                            <Play className="w-4 h-4 mr-2" />
+                            {hasAttempted ? 'Retake Test' : 'Start Test'}
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
 
