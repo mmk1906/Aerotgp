@@ -96,7 +96,7 @@ export function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-2">
+          <div className="md:hidden flex items-center">
             <button
               className="p-2"
               onClick={() => setIsOpen(!isOpen)}

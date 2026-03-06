@@ -12,12 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { mockEvents, mockRegistrations, Event } from '../data/mockData';
-import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, CheckCircle, XCircle, Rocket, Eye, BookOpen, Clock } from 'lucide-react';
+import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, CheckCircle, XCircle, Rocket, Eye, BookOpen, Clock, Image as ImageIcon, UserIcon as UserCheck, FileText, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
 import { BlogManagementTab } from '../components/BlogManagementTab';
 import { ClubManagementTab } from '../components/ClubManagementTab';
+import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
+import { FacultyManagement } from '../components/FacultyManagement';
+import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
+import { AdminSettings } from '../components/AdminSettings';
 
 interface AeroClubApplication {
   id: string;
@@ -174,8 +178,8 @@ export function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400">Manage events and registrations</p>
+          <h1 className="text-4xl font-bold mb-2">Admin Control Panel</h1>
+          <p className="text-gray-400">Comprehensive website management dashboard</p>
         </motion.div>
 
         {/* Stats */}
@@ -207,21 +211,65 @@ export function AdminDashboard() {
           ))}
         </div>
 
+        {/* Quick Guide */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mb-8"
+        >
+          <Card className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm border-blue-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-500/20 rounded-lg">
+                  <Rocket className="w-6 h-6 text-blue-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold mb-2">Welcome to the Admin Control Panel</h3>
+                  <p className="text-sm text-gray-300 mb-3">
+                    You have full control over the website. Manage events, blogs, clubs, faculty, photo gallery, and website content - all without coding!
+                  </p>
+                  <div className="grid md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
+                      <span className="text-gray-300">Drag & drop photo uploads</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
+                      <span className="text-gray-300">One-click approvals</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
+                      <span className="text-gray-300">Export data anytime</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Tabs */}
         <Tabs defaultValue="events" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="events">Event Management</TabsTrigger>
-            <TabsTrigger value="registrations">Registrations</TabsTrigger>
-            <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
-            <TabsTrigger value="blogs">Blog Management</TabsTrigger>
-            <TabsTrigger value="clubs">Club Management</TabsTrigger>
-            <TabsTrigger value="applications">
-              Club Applications
-              {stats.pendingApplications > 0 && (
-                <Badge className="ml-2 bg-red-500">{stats.pendingApplications}</Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="inline-flex min-w-full bg-slate-800/50">
+              <TabsTrigger value="events">Events</TabsTrigger>
+              <TabsTrigger value="registrations">Registrations</TabsTrigger>
+              <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
+              <TabsTrigger value="blogs">Blogs</TabsTrigger>
+              <TabsTrigger value="clubs">Clubs</TabsTrigger>
+              <TabsTrigger value="applications">
+                Applications
+                {stats.pendingApplications > 0 && (
+                  <Badge className="ml-2 bg-red-500">{stats.pendingApplications}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="photoGallery">Gallery</TabsTrigger>
+              <TabsTrigger value="faculty">Faculty</TabsTrigger>
+              <TabsTrigger value="websiteContent">Content</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="events">
             <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
@@ -623,6 +671,22 @@ export function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="photoGallery">
+            <PhotoGalleryManagement />
+          </TabsContent>
+
+          <TabsContent value="faculty">
+            <FacultyManagement />
+          </TabsContent>
+
+          <TabsContent value="websiteContent">
+            <WebsiteContentManagement />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <AdminSettings />
           </TabsContent>
         </Tabs>
       </div>

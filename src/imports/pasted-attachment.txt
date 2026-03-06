@@ -1,0 +1,173 @@
+Enhance the Aeronautical Engineering Department website by creating a powerful yet easy-to-use Admin Control Panel designed for non-technical users. The admin should be able to manage and update website content without coding.
+
+The admin dashboard must follow the same aerospace-themed UI (dark navy, matte black, metallic accents, glassmorphism cards) but prioritize simplicity and usability.
+
+1. Admin Photo Gallery Management
+
+Create a Photo Gallery Management section in the Admin Dashboard.
+
+Admin should be able to:
+
+Upload new images to the gallery
+
+Add captions and event names
+
+Categorize photos (Events, Workshops, Aero Club, Projects, Visits, etc.)
+
+Delete photos from the gallery
+
+Edit captions or categories
+
+Preview images before publishing
+
+UI Requirements:
+
+Drag-and-drop image upload
+
+Image preview before saving
+
+Simple grid layout for managing images
+
+One-click delete option
+
+Confirmation popup before deletion
+
+2. Full Website Content Management (Admin Access)
+
+Give the Admin the ability to edit important website sections directly from the dashboard.
+
+Admin should be able to manage:
+
+Website Content
+
+Home page text and highlights
+
+About department content
+
+Club descriptions
+
+Announcements
+
+Faculty Section
+
+Add new faculty
+
+Edit faculty information
+
+Remove faculty
+
+Events Management
+
+Create events
+
+Edit event details
+
+Delete events
+
+View event registrations
+
+Blog Management
+
+Approve or reject blogs
+
+Edit blog posts
+
+Delete blogs
+
+Clubs Management
+
+Add new clubs
+
+Edit club information
+
+Delete clubs
+
+Manage club members
+
+Photo Gallery
+
+Upload photos
+
+Edit captions
+
+Delete photos
+
+3. Admin Dashboard UI
+
+Create a simple and clean dashboard interface.
+
+Dashboard Layout:
+
+Sidebar navigation including:
+
+Dashboard Overview
+
+Events
+
+Blogs
+
+Clubs
+
+Faculty
+
+Photo Gallery
+
+Users
+
+Website Content
+
+Settings
+
+Dashboard should show analytics like:
+
+Total users
+
+Total events
+
+Total blogs
+
+Total gallery photos
+
+4. Easy Editing System for Non-Technical Admin
+
+Since the admin may not have technical knowledge, implement:
+
+Simple forms for editing content
+
+Rich text editor for writing or updating text
+
+Image upload buttons
+
+Preview before publishing
+
+Clear labels and instructions
+
+Make editing feel similar to editing a social media post.
+
+5. Security and Permissions
+
+Implement role-based access:
+
+Admin privileges:
+
+Full control over all website sections
+
+Ability to edit, delete, and create content
+
+Access to all dashboard features
+
+Regular users should not have access to admin tools.
+
+6. Additional Features
+
+Confirmation popup before deleting content
+
+Autosave while editing content
+
+Responsive admin dashboard
+
+Fast loading interface
+
+Clean and intuitive UI
+
+The goal is to make the admin panel simple, powerful, and easy enough for a non-technical administrator to manage the entire website without coding knowledge.

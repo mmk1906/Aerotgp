@@ -323,7 +323,7 @@ export function Academics() {
                   <div className="relative">
                     <div className="absolute inset-0 bg-blue-600/20 rounded-lg blur-xl" />
                     <img
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
+                      src="https://static.vecteezy.com/system/resources/thumbnails/004/730/129/small_2x/digital-online-library-isometric-flowchart-vector.jpg"
                       alt="Digital Library"
                       className="relative rounded-lg shadow-2xl object-cover h-80 w-full"
                     />
