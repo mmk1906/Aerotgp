@@ -154,7 +154,7 @@ export const mockFaculty: Faculty[] = [
   {
     id: 'f5',
     name: 'Prof. Himani Harpal',
-    designation: 'Associate Professor',
+    designation: 'Teaching Assistant',
     qualification: 'B.E. (ME ) M.Tech (AE)',
     specialization: '--',
     email: 'himani.aeronautical@tgpcet.com',

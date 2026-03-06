@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -20,17 +20,22 @@ export function Login() {
     const success = await login(loginData.email, loginData.password);
     if (success) {
       toast.success('Login successful!');
-      // Redirect based on role
-      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-      if (storedUser.role === 'admin') {
+      // Note: The redirect will happen in useEffect below when user state updates
+    } else {
+      toast.error('Invalid credentials. Please check your email and password.');
+    }
+  };
+
+  // Redirect based on role after user state updates
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
         navigate('/admin');
       } else {
         navigate('/portal');
       }
-    } else {
-      toast.error('Invalid credentials. Try admin@aerotgp / admin123');
     }
-  };
+  }, [user, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +50,9 @@ export function Login() {
     const success = await register(registerData.name, registerData.email, registerData.password);
     if (success) {
       toast.success('Registration successful!');
-      navigate('/portal');
+      // Redirect will happen in useEffect when user state updates
     } else {
-      toast.error('Registration failed');
+      toast.error('Registration failed. Email may already be in use.');
     }
   };
 

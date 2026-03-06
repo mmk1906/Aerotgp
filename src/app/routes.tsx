@@ -9,17 +9,20 @@ import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminDashboardProtected } from './pages/AdminDashboardProtected';
 import { JoinAeroClub } from './pages/JoinAeroClub';
 import { Blogs } from './pages/Blogs';
 import { BlogCreate } from './pages/BlogCreate';
 import { BlogView } from './pages/BlogView';
 import { PortalLayout } from './components/PortalLayout';
+import { ProtectedPortalLayout } from './components/ProtectedPortalLayout';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { ProfileManagement } from './pages/ProfileManagement';
 import { MyEvents } from './pages/MyEvents';
 import { MyBlogs } from './pages/MyBlogs';
 import { PortalTests } from './pages/PortalTests';
 import { PortalAeroClub } from './pages/PortalAeroClub';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -38,13 +41,13 @@ export const router = createBrowserRouter([
       { path: 'blogs/edit/:id', Component: BlogCreate },
       { path: 'blogs/:id', Component: BlogView },
       { path: 'login', Component: Login },
-      { path: 'admin', Component: AdminDashboard },
+      { path: 'admin', Component: AdminDashboardProtected },
       { path: 'join-aero-club', Component: JoinAeroClub },
     ],
   },
   {
     path: '/portal',
-    Component: PortalLayout,
+    Component: ProtectedPortalLayout,
     children: [
       { index: true, Component: StudentDashboard },
       { path: 'profile', Component: ProfileManagement },

@@ -1,4 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User as FirebaseUser } from 'firebase/auth';
+import {
+  registerUser as firebaseRegister,
+  loginUser as firebaseLogin,
+  logoutUser as firebaseLogout,
+  getUserProfile,
+  updateUserProfile,
+  onAuthStateChange,
+} from '../services/authService';
+import type { UserProfile } from '../services/authService';
 
 interface User {
   id: string;
@@ -9,86 +19,121 @@ interface User {
   department?: string;
   year?: string;
   prn?: string;
+  profilePhoto?: string;
 }
 
 interface AuthContextType {
   user: User | null;
+  loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (name: string, email: string, password: string) => Promise<boolean>;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Listen to Firebase auth state changes
+    const unsubscribe = onAuthStateChange(async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        try {
+          // Get user profile from Firestore
+          const userProfile = await getUserProfile(firebaseUser.uid);
+          if (userProfile) {
+            setUser({
+              id: userProfile.id,
+              name: userProfile.name,
+              email: userProfile.email,
+              role: userProfile.role,
+              phone: userProfile.phone,
+              department: userProfile.department,
+              year: userProfile.year,
+              prn: userProfile.prn,
+              profilePhoto: userProfile.profilePhoto,
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication
-    if (email === 'admin@aerotgp' && password === 'admin123') {
-      const adminUser = {
-        id: '1',
-        name: 'Admin User',
-        email: 'admin@aerotgp',
-        role: 'admin' as const,
-      };
-      setUser(adminUser);
-      localStorage.setItem('user', JSON.stringify(adminUser));
+    try {
+      const userProfile = await firebaseLogin(email, password);
+      setUser({
+        id: userProfile.id,
+        name: userProfile.name,
+        email: userProfile.email,
+        role: userProfile.role,
+        phone: userProfile.phone,
+        department: userProfile.department,
+        year: userProfile.year,
+        prn: userProfile.prn,
+        profilePhoto: userProfile.profilePhoto,
+      });
       return true;
-    } else if (password.length >= 6) {
-      const studentUser = {
-        id: '2',
-        name: email.split('@')[0],
-        email,
-        role: 'student' as const,
-      };
-      setUser(studentUser);
-      localStorage.setItem('user', JSON.stringify(studentUser));
-      return true;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Mock registration
-    if (password.length >= 6) {
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
-        email,
-        role: 'student' as const,
-      };
-      setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+    try {
+      const userProfile = await firebaseRegister(name, email, password);
+      setUser({
+        id: userProfile.id,
+        name: userProfile.name,
+        email: userProfile.email,
+        role: userProfile.role,
+        phone: userProfile.phone,
+        department: userProfile.department,
+        year: userProfile.year,
+        prn: userProfile.prn,
+        profilePhoto: userProfile.profilePhoto,
+      });
       return true;
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      return false;
     }
-    return false;
   };
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = async (userData: Partial<User>): Promise<void> => {
     if (user) {
-      const updatedUser = { ...user, ...userData };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      try {
+        await updateUserProfile(user.id, userData as Partial<UserProfile>);
+        setUser({ ...user, ...userData });
+      } catch (error) {
+        console.error('Error updating user:', error);
+        throw error;
+      }
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      await firebaseLogout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -22,6 +22,7 @@ import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { FacultyManagement } from '../components/FacultyManagement';
 import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
 import { AdminSettings } from '../components/AdminSettings';
+import { DataExportTab } from '../components/DataExportTab';
 
 interface AeroClubApplication {
   id: string;
@@ -77,8 +78,8 @@ export function AdminDashboard() {
     }
   }, []);
 
-  if (!user || user.role !== 'admin') {
-    navigate('/');
+  // Safety check - ProtectedRoute wrapper should prevent this
+  if (!user) {
     return null;
   }
 
@@ -267,6 +268,7 @@ export function AdminDashboard() {
               <TabsTrigger value="photoGallery">Gallery</TabsTrigger>
               <TabsTrigger value="faculty">Faculty</TabsTrigger>
               <TabsTrigger value="websiteContent">Content</TabsTrigger>
+              <TabsTrigger value="export">Export Data</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
           </div>
@@ -683,6 +685,10 @@ export function AdminDashboard() {
 
           <TabsContent value="websiteContent">
             <WebsiteContentManagement />
+          </TabsContent>
+
+          <TabsContent value="export">
+            <DataExportTab />
           </TabsContent>
 
           <TabsContent value="settings">

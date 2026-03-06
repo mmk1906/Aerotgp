@@ -24,11 +24,6 @@ export function PortalLayout() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  if (!user || user.role !== 'student') {
-    navigate('/login');
-    return null;
-  }
-
   const portalLinks = [
     { name: 'Dashboard', path: '/portal', icon: LayoutDashboard },
     { name: 'Profile', path: '/portal/profile', icon: User },
@@ -42,6 +37,11 @@ export function PortalLayout() {
     logout();
     navigate('/');
   };
+
+  // Safety check - ProtectedRoute should prevent this, but just in case
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="relative min-h-screen bg-[#0a0e1a]">

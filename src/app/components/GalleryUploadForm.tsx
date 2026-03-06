@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'sonner';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 import { GalleryImage } from '../data/clubData';
+import { CloudinaryImageUploader } from './CloudinaryImageUploader';
+import type { CloudinaryUploadResult } from '../services/cloudinaryService';
 
 interface GalleryUploadFormProps {
   isOpen: boolean;
@@ -22,11 +24,16 @@ export function GalleryUploadForm({ isOpen, onClose, onUpload, userEmail }: Gall
   const [eventTag, setEventTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleCloudinaryUpload = (result: CloudinaryUploadResult) => {
+    setImageUrl(result.secure_url);
+    toast.success('Image uploaded to Cloudinary!');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!imageUrl || !caption || !eventTag) {
-      toast.error('Please fill all fields');
+      toast.error('Please fill all fields and upload an image');
       return;
     }
 
@@ -68,34 +75,15 @@ export function GalleryUploadForm({ isOpen, onClose, onUpload, userEmail }: Gall
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image URL */}
+          {/* Cloudinary Image Upload */}
           <div>
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input
-              id="imageUrl"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="bg-slate-800 border-slate-700"
-              required
+            <Label>Upload Image</Label>
+            <CloudinaryImageUploader
+              category="gallery"
+              onUploadComplete={handleCloudinaryUpload}
+              buttonText="Select Gallery Image"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter the URL of the image you want to upload
-            </p>
           </div>
-
-          {/* Preview */}
-          {imageUrl && (
-            <div className="relative h-48 rounded-lg overflow-hidden bg-slate-800">
-              <img
-                src={imageUrl}
-                alt="Preview"
-                className="w-full h-full object-cover"
-                onError={() => toast.error('Invalid image URL')}
-              />
-            </div>
-          )}
 
           {/* Caption */}
           <div>
@@ -142,11 +130,11 @@ export function GalleryUploadForm({ isOpen, onClose, onUpload, userEmail }: Gall
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !imageUrl}
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Upload className="w-4 h-4 mr-2" />
-              {isSubmitting ? 'Uploading...' : 'Upload Image'}
+              {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
             </Button>
           </div>
         </form>
