@@ -1,0 +1,760 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
+import { Badge } from './ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { toast } from 'sonner';
+import { 
+  Rocket, 
+  Users, 
+  Image as ImageIcon, 
+  TrendingUp, 
+  CheckCircle, 
+  XCircle, 
+  Edit, 
+  Trash2,
+  Plus,
+  Eye
+} from 'lucide-react';
+import { 
+  ClubMember, 
+  GalleryImage, 
+  ProjectUpdate, 
+  Club,
+  mockClubMembers,
+  mockGalleryImages,
+  mockProjectUpdates,
+  mockClubs
+} from '../data/clubData';
+
+export function ClubManagementTab() {
+  const [clubs, setClubs] = useState<Club[]>(mockClubs);
+  const [members, setMembers] = useState<ClubMember[]>(mockClubMembers);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [projectUpdates, setProjectUpdates] = useState<ProjectUpdate[]>([]);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [isClubDialogOpen, setIsClubDialogOpen] = useState(false);
+  const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
+  const [editingClub, setEditingClub] = useState<Club | null>(null);
+  const [editingMember, setEditingMember] = useState<ClubMember | null>(null);
+
+  const [clubForm, setClubForm] = useState({
+    name: '',
+    description: '',
+    logo: '',
+    facultyCoordinator: '',
+    memberCount: 0,
+    establishedYear: '',
+  });
+
+  const [memberForm, setMemberForm] = useState({
+    name: '',
+    photo: '',
+    designation: '',
+    areaOfInterest: '',
+    email: '',
+    year: '',
+  });
+
+  useEffect(() => {
+    // Load data from localStorage
+    const storedGallery = localStorage.getItem('clubGallery');
+    if (storedGallery) {
+      setGalleryImages(JSON.parse(storedGallery));
+    } else {
+      localStorage.setItem('clubGallery', JSON.stringify(mockGalleryImages));
+      setGalleryImages(mockGalleryImages);
+    }
+
+    const storedProjects = localStorage.getItem('projectUpdates');
+    if (storedProjects) {
+      setProjectUpdates(JSON.parse(storedProjects));
+    } else {
+      localStorage.setItem('projectUpdates', JSON.stringify(mockProjectUpdates));
+      setProjectUpdates(mockProjectUpdates);
+    }
+
+    const storedMembers = localStorage.getItem('clubMembers');
+    if (storedMembers) {
+      setMembers(JSON.parse(storedMembers));
+    } else {
+      localStorage.setItem('clubMembers', JSON.stringify(mockClubMembers));
+    }
+
+    const storedClubs = localStorage.getItem('clubs');
+    if (storedClubs) {
+      setClubs(JSON.parse(storedClubs));
+    } else {
+      localStorage.setItem('clubs', JSON.stringify(mockClubs));
+    }
+  }, []);
+
+  const handleApproveImage = (imageId: string) => {
+    const updatedImages = galleryImages.map(img =>
+      img.id === imageId ? { ...img, status: 'approved' as const } : img
+    );
+    setGalleryImages(updatedImages);
+    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
+    toast.success('Image approved successfully!');
+  };
+
+  const handleRejectImage = (imageId: string) => {
+    const updatedImages = galleryImages.map(img =>
+      img.id === imageId ? { ...img, status: 'rejected' as const } : img
+    );
+    setGalleryImages(updatedImages);
+    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
+    toast.success('Image rejected!');
+  };
+
+  const handleDeleteImage = (imageId: string) => {
+    const updatedImages = galleryImages.filter(img => img.id !== imageId);
+    setGalleryImages(updatedImages);
+    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
+    toast.success('Image deleted!');
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    const updatedProjects = projectUpdates.filter(p => p.id !== projectId);
+    setProjectUpdates(updatedProjects);
+    localStorage.setItem('projectUpdates', JSON.stringify(updatedProjects));
+    toast.success('Project update deleted!');
+  };
+
+  const handleSaveClub = () => {
+    if (!clubForm.name || !clubForm.description) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    if (editingClub) {
+      const updatedClubs = clubs.map(c =>
+        c.id === editingClub.id ? { ...c, ...clubForm } : c
+      );
+      setClubs(updatedClubs);
+      localStorage.setItem('clubs', JSON.stringify(updatedClubs));
+      toast.success('Club updated successfully!');
+    } else {
+      const newClub: Club = {
+        id: Date.now().toString(),
+        ...clubForm,
+      };
+      const updatedClubs = [...clubs, newClub];
+      setClubs(updatedClubs);
+      localStorage.setItem('clubs', JSON.stringify(updatedClubs));
+      toast.success('Club created successfully!');
+    }
+
+    setIsClubDialogOpen(false);
+    setEditingClub(null);
+    setClubForm({
+      name: '',
+      description: '',
+      logo: '',
+      facultyCoordinator: '',
+      memberCount: 0,
+      establishedYear: '',
+    });
+  };
+
+  const handleSaveMember = () => {
+    if (!memberForm.name || !memberForm.designation || !memberForm.areaOfInterest) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    if (editingMember) {
+      const updatedMembers = members.map(m =>
+        m.id === editingMember.id ? { ...m, ...memberForm } : m
+      );
+      setMembers(updatedMembers);
+      localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
+      toast.success('Member updated successfully!');
+    } else {
+      const newMember: ClubMember = {
+        id: Date.now().toString(),
+        ...memberForm,
+      };
+      const updatedMembers = [...members, newMember];
+      setMembers(updatedMembers);
+      localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
+      toast.success('Member added successfully!');
+    }
+
+    setIsMemberDialogOpen(false);
+    setEditingMember(null);
+    setMemberForm({
+      name: '',
+      photo: '',
+      designation: '',
+      areaOfInterest: '',
+      email: '',
+      year: '',
+    });
+  };
+
+  const handleEditClub = (club: Club) => {
+    setEditingClub(club);
+    setClubForm(club);
+    setIsClubDialogOpen(true);
+  };
+
+  const handleDeleteClub = (clubId: string) => {
+    const updatedClubs = clubs.filter(c => c.id !== clubId);
+    setClubs(updatedClubs);
+    localStorage.setItem('clubs', JSON.stringify(updatedClubs));
+    toast.success('Club deleted!');
+  };
+
+  const handleEditMember = (member: ClubMember) => {
+    setEditingMember(member);
+    setMemberForm(member);
+    setIsMemberDialogOpen(true);
+  };
+
+  const handleDeleteMember = (memberId: string) => {
+    const updatedMembers = members.filter(m => m.id !== memberId);
+    setMembers(updatedMembers);
+    localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
+    toast.success('Member removed!');
+  };
+
+  const pendingImages = galleryImages.filter(img => img.status === 'pending');
+  const approvedImages = galleryImages.filter(img => img.status === 'approved');
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Total Clubs</p>
+                <p className="text-3xl font-bold text-blue-500">{clubs.length}</p>
+              </div>
+              <Rocket className="w-12 h-12 text-blue-500/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Active Members</p>
+                <p className="text-3xl font-bold text-green-500">{members.length}</p>
+              </div>
+              <Users className="w-12 h-12 text-green-500/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Pending Approvals</p>
+                <p className="text-3xl font-bold text-yellow-500">{pendingImages.length}</p>
+              </div>
+              <ImageIcon className="w-12 h-12 text-yellow-500/20" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-400">Project Updates</p>
+                <p className="text-3xl font-bold text-purple-500">{projectUpdates.length}</p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-purple-500/20" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Management Tabs */}
+      <Tabs defaultValue="clubs" className="space-y-6">
+        <TabsList className="bg-slate-900/50 border-slate-700">
+          <TabsTrigger value="clubs">Clubs</TabsTrigger>
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="gallery">
+            Gallery
+            {pendingImages.length > 0 && (
+              <Badge className="ml-2 bg-yellow-500">{pendingImages.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+        </TabsList>
+
+        {/* Clubs Tab */}
+        <TabsContent value="clubs">
+          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Manage Clubs</CardTitle>
+                <Button
+                  onClick={() => {
+                    setEditingClub(null);
+                    setClubForm({
+                      name: '',
+                      description: '',
+                      logo: '',
+                      facultyCoordinator: '',
+                      memberCount: 0,
+                      establishedYear: '',
+                    });
+                    setIsClubDialogOpen(true);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Club
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {clubs.map(club => (
+                  <div
+                    key={club.id}
+                    className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={club.logo}
+                        alt={club.name}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                      <div>
+                        <h3 className="font-semibold text-lg">{club.name}</h3>
+                        <p className="text-sm text-gray-400">{club.facultyCoordinator}</p>
+                        <div className="flex items-center space-x-4 mt-1">
+                          <span className="text-xs text-gray-500">{club.memberCount} members</span>
+                          <span className="text-xs text-gray-500">Est. {club.establishedYear}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditClub(club)}
+                        className="border-slate-600"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteClub(club.id)}
+                        className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Members Tab */}
+        <TabsContent value="members">
+          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Manage Members</CardTitle>
+                <Button
+                  onClick={() => {
+                    setEditingMember(null);
+                    setMemberForm({
+                      name: '',
+                      photo: '',
+                      designation: '',
+                      areaOfInterest: '',
+                      email: '',
+                      year: '',
+                    });
+                    setIsMemberDialogOpen(true);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Member
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {members.map(member => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={member.photo}
+                        alt={member.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div>
+                        <h3 className="font-semibold">{member.name}</h3>
+                        <p className="text-sm text-blue-400">{member.designation}</p>
+                        <p className="text-xs text-gray-500">{member.areaOfInterest}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditMember(member)}
+                        className="border-slate-600"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteMember(member.id)}
+                        className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Gallery Tab */}
+        <TabsContent value="gallery">
+          <div className="space-y-6">
+            {/* Pending Approvals */}
+            {pendingImages.length > 0 && (
+              <Card className="bg-slate-900/50 backdrop-blur-sm border-yellow-700">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-yellow-500">
+                    <ImageIcon className="w-5 h-5 mr-2" />
+                    Pending Approvals ({pendingImages.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {pendingImages.map(image => (
+                      <div
+                        key={image.id}
+                        className="relative rounded-lg overflow-hidden border border-yellow-700"
+                      >
+                        <img
+                          src={image.url}
+                          alt={image.caption}
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="p-4 bg-slate-800">
+                          <p className="text-sm font-semibold mb-1">{image.caption}</p>
+                          <Badge className="mb-2">{image.eventTag}</Badge>
+                          <p className="text-xs text-gray-500 mb-3">
+                            By {image.uploadedBy} on {image.uploadedAt}
+                          </p>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveImage(image.id)}
+                              className="flex-1 bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleRejectImage(image.id)}
+                              className="flex-1 bg-red-600 hover:bg-red-700"
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Approved Images */}
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle>Approved Gallery Images ({approvedImages.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {approvedImages.map(image => (
+                    <div key={image.id} className="relative group">
+                      <img
+                        src={image.url}
+                        alt={image.caption}
+                        className="w-full h-32 object-cover rounded-lg cursor-pointer"
+                        onClick={() => setSelectedImage(image)}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDeleteImage(image.id)}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 border-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Projects Tab */}
+        <TabsContent value="projects">
+          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+            <CardHeader>
+              <CardTitle>Project Updates ({projectUpdates.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {projectUpdates.map(project => (
+                  <div
+                    key={project.id}
+                    className="p-4 bg-slate-800/50 rounded-lg border border-slate-700"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-lg">{project.title}</h3>
+                        <p className="text-sm text-gray-400">{project.date}</p>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge className="bg-blue-600">{project.progressStage}</Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteProject(project.id)}
+                          className="border-red-600 text-red-500 hover:bg-red-600 hover:text-white"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-300 mb-3">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {project.teamMembers.map((member, idx) => (
+                        <Badge key={idx} variant="outline" className="border-slate-600">
+                          {member}
+                        </Badge>
+                      ))}
+                    </div>
+                    {project.images.length > 0 && (
+                      <div className="flex space-x-2">
+                        {project.images.map((img, idx) => (
+                          <img
+                            key={idx}
+                            src={img}
+                            alt={`${project.title} ${idx + 1}`}
+                            className="w-20 h-20 object-cover rounded"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Club Dialog */}
+      <Dialog open={isClubDialogOpen} onOpenChange={setIsClubDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingClub ? 'Edit Club' : 'Add New Club'}</DialogTitle>
+            <DialogDescription>
+              {editingClub ? 'Update the club information below.' : 'Fill in the details to create a new club.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Club Name *</Label>
+              <Input
+                value={clubForm.name}
+                onChange={(e) => setClubForm({ ...clubForm, name: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="Enter club name"
+              />
+            </div>
+            <div>
+              <Label>Description *</Label>
+              <Textarea
+                value={clubForm.description}
+                onChange={(e) => setClubForm({ ...clubForm, description: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="Enter club description"
+              />
+            </div>
+            <div>
+              <Label>Logo URL</Label>
+              <Input
+                value={clubForm.logo}
+                onChange={(e) => setClubForm({ ...clubForm, logo: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="https://example.com/logo.png"
+              />
+            </div>
+            <div>
+              <Label>Faculty Coordinator</Label>
+              <Input
+                value={clubForm.facultyCoordinator}
+                onChange={(e) => setClubForm({ ...clubForm, facultyCoordinator: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="Dr. John Doe"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Member Count</Label>
+                <Input
+                  type="number"
+                  value={clubForm.memberCount}
+                  onChange={(e) => setClubForm({ ...clubForm, memberCount: parseInt(e.target.value) || 0 })}
+                  className="bg-slate-800 border-slate-700"
+                />
+              </div>
+              <div>
+                <Label>Established Year</Label>
+                <Input
+                  value={clubForm.establishedYear}
+                  onChange={(e) => setClubForm({ ...clubForm, establishedYear: e.target.value })}
+                  className="bg-slate-800 border-slate-700"
+                  placeholder="2020"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsClubDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveClub} className="bg-blue-600 hover:bg-blue-700">Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Member Dialog */}
+      <Dialog open={isMemberDialogOpen} onOpenChange={setIsMemberDialogOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingMember ? 'Edit Member' : 'Add New Member'}</DialogTitle>
+            <DialogDescription>
+              {editingMember ? 'Update the member information below.' : 'Fill in the details to add a new member.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Name *</Label>
+              <Input
+                value={memberForm.name}
+                onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="Enter member name"
+              />
+            </div>
+            <div>
+              <Label>Photo URL</Label>
+              <Input
+                value={memberForm.photo}
+                onChange={(e) => setMemberForm({ ...memberForm, photo: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="https://example.com/photo.jpg"
+              />
+            </div>
+            <div>
+              <Label>Designation *</Label>
+              <Input
+                value={memberForm.designation}
+                onChange={(e) => setMemberForm({ ...memberForm, designation: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="President, Vice President, Core Member, etc."
+              />
+            </div>
+            <div>
+              <Label>Area of Interest *</Label>
+              <Input
+                value={memberForm.areaOfInterest}
+                onChange={(e) => setMemberForm({ ...memberForm, areaOfInterest: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="UAV Design, Aerodynamics, etc."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={memberForm.email}
+                  onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                  className="bg-slate-800 border-slate-700"
+                  placeholder="member@example.com"
+                />
+              </div>
+              <div>
+                <Label>Year</Label>
+                <Input
+                  value={memberForm.year}
+                  onChange={(e) => setMemberForm({ ...memberForm, year: e.target.value })}
+                  className="bg-slate-800 border-slate-700"
+                  placeholder="Final Year, Third Year, etc."
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsMemberDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleSaveMember} className="bg-blue-600 hover:bg-blue-700">Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image View Dialog */}
+      <Dialog open={selectedImage !== null} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl">
+          {selectedImage && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedImage.caption}</DialogTitle>
+                <DialogDescription>
+                  View gallery image details
+                </DialogDescription>
+              </DialogHeader>
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.caption}
+                className="w-full h-auto rounded-lg"
+              />
+              <div className="space-y-2">
+                <p className="text-sm"><strong>Event Tag:</strong> {selectedImage.eventTag}</p>
+                <p className="text-sm"><strong>Uploaded By:</strong> {selectedImage.uploadedBy}</p>
+                <p className="text-sm"><strong>Date:</strong> {selectedImage.uploadedAt}</p>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

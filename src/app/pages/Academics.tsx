@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Download, BookOpen, Calendar, Clock, Award, Play, Lock } from 'lucide-react';
+import { Download, BookOpen, Calendar, Clock, Award, Play, Lock, Library, ExternalLink } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { MCQTest, Quiz } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
@@ -256,6 +256,103 @@ export function Academics() {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        {/* Departmental Digital Library */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Departmental Digital Library
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Access a comprehensive collection of books, notes, study materials, and previous year papers for all aerospace subjects
+            </p>
+          </div>
+
+          <Card className="bg-gradient-to-br from-blue-900/30 to-purple-900/30 backdrop-blur-sm border-blue-700/50 hover:border-blue-500 transition-all duration-300 shadow-lg shadow-blue-900/20">
+            <CardContent className="p-8 md:p-12">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="p-3 bg-blue-600/20 rounded-lg">
+                      <Library className="w-10 h-10 text-blue-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold">Study Resources Hub</h3>
+                  </div>
+                  <p className="text-gray-300 leading-relaxed mb-6">
+                    Our digital library provides students with easy access to essential learning materials organized by subject and semester. Find textbooks, lecture notes, reference materials, and examination papers all in one place.
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {[
+                      { icon: BookOpen, label: 'Textbooks & References' },
+                      { icon: Calendar, label: 'Previous Year Papers' },
+                      { icon: Download, label: 'Lecture Notes' },
+                      { icon: Award, label: 'Study Guides' },
+                    ].map((item, index) => (
+                      <div
+                        key={item.label}
+                        className="flex items-center space-x-2 p-3 bg-slate-800/50 rounded-lg"
+                      >
+                        <item.icon className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                        <span className="text-sm text-gray-300">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <a
+                    href="https://drive.google.com/drive/folders/1WApyxlmxacIfPqYNeBtof_BA1UT2nFRk?usp=sharing"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block"
+                  >
+                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      <Library className="w-5 h-5 mr-2" />
+                      Open Digital Library
+                      <ExternalLink className="w-4 h-4 ml-2" />
+                    </Button>
+                  </a>
+                </div>
+
+                <div className="hidden md:block">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-600/20 rounded-lg blur-xl" />
+                    <img
+                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80"
+                      alt="Digital Library"
+                      className="relative rounded-lg shadow-2xl object-cover h-80 w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Resource Categories */}
+              <div className="mt-8 pt-8 border-t border-gray-700">
+                <h4 className="text-lg font-semibold mb-4 text-blue-400">Available Resources by Category:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    'Aerodynamics',
+                    'Aircraft Structures',
+                    'Propulsion',
+                    'Flight Mechanics',
+                    'Previous Year Papers',
+                  ].map((category) => (
+                    <div
+                      key={category}
+                      className="flex items-center justify-center p-3 bg-slate-800/30 rounded-lg border border-blue-800/30 hover:border-blue-600/50 transition-colors"
+                    >
+                      <span className="text-sm text-gray-300 text-center">{category}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Online MCQ Tests */}

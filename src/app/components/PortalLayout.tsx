@@ -16,6 +16,7 @@ import {
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
 import { Starfield } from './Starfield';
+import { ScrollToTop } from './ScrollToTop';
 
 export function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -44,6 +45,7 @@ export function PortalLayout() {
 
   return (
     <div className="relative min-h-screen bg-[#0a0e1a]">
+      <ScrollToTop />
       <Starfield />
       
       {/* Top Header */}

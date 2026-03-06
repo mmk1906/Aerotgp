@@ -1,11 +1,58 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Plane, Users, Rocket, Trophy } from 'lucide-react';
+import { Plane, Users, Rocket, Trophy, Upload, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { ClubMemberCard } from '../components/ClubMemberCard';
+import { ProjectUpdateCard } from '../components/ProjectUpdateCard';
+import { GalleryUploadForm } from '../components/GalleryUploadForm';
+import { ProjectUpdateForm } from '../components/ProjectUpdateForm';
+import { ImageLightbox } from '../components/ImageLightbox';
+import { useAuth } from '../context/AuthContext';
+import { 
+  mockClubMembers, 
+  mockGalleryImages, 
+  mockProjectUpdates,
+  ClubMember,
+  GalleryImage,
+  ProjectUpdate
+} from '../data/clubData';
 
 export function Clubs() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [members, setMembers] = useState<ClubMember[]>(mockClubMembers);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [projectUpdates, setProjectUpdates] = useState<ProjectUpdate[]>([]);
+  const [isGalleryUploadOpen, setIsGalleryUploadOpen] = useState(false);
+  const [isProjectUpdateOpen, setIsProjectUpdateOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  useEffect(() => {
+    // Load gallery images from localStorage
+    const storedGallery = localStorage.getItem('clubGallery');
+    if (storedGallery) {
+      const parsed = JSON.parse(storedGallery);
+      setGalleryImages(parsed.filter((img: GalleryImage) => img.status === 'approved'));
+    } else {
+      // Initialize with mock data
+      localStorage.setItem('clubGallery', JSON.stringify(mockGalleryImages));
+      setGalleryImages(mockGalleryImages.filter(img => img.status === 'approved'));
+    }
+
+    // Load project updates from localStorage
+    const storedProjects = localStorage.getItem('projectUpdates');
+    if (storedProjects) {
+      setProjectUpdates(JSON.parse(storedProjects));
+    } else {
+      // Initialize with mock data
+      localStorage.setItem('projectUpdates', JSON.stringify(mockProjectUpdates));
+      setProjectUpdates(mockProjectUpdates);
+    }
+  }, []);
+
   const projects = [
     {
       title: 'Drone Assembly',
@@ -24,14 +71,32 @@ export function Clubs() {
     },
   ];
 
-  const gallery = [
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/48.png',
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/45.png',
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/56.png',
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/38.png',
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/39.png',
-    'https://www.tgpcet.com/assets/img/Aeronautical-Engineering/Gallery/36.jpeg',
-  ];
+  const handleGalleryUpload = (newImage: GalleryImage) => {
+    const storedGallery = localStorage.getItem('clubGallery');
+    const currentGallery = storedGallery ? JSON.parse(storedGallery) : mockGalleryImages;
+    const updatedGallery = [...currentGallery, newImage];
+    localStorage.setItem('clubGallery', JSON.stringify(updatedGallery));
+    // Don't show pending images to regular users
+    if (newImage.status === 'approved') {
+      setGalleryImages(prev => [...prev, newImage]);
+    }
+  };
+
+  const handleProjectUpdate = (newUpdate: ProjectUpdate) => {
+    const updatedProjects = [newUpdate, ...projectUpdates];
+    setProjectUpdates(updatedProjects);
+    localStorage.setItem('projectUpdates', JSON.stringify(updatedProjects));
+  };
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const lightboxImages = galleryImages.map(img => ({
+    url: img.url,
+    caption: `${img.caption} - ${img.eventTag}`,
+  }));
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -74,7 +139,7 @@ export function Clubs() {
                     <div className="flex items-center space-x-3">
                       <Users className="w-8 h-8 text-blue-500" />
                       <div>
-                        <div className="text-2xl font-bold">25</div>
+                        <div className="text-2xl font-bold">{members.length}</div>
                         <div className="text-sm text-gray-400">Active Members</div>
                       </div>
                     </div>
@@ -102,7 +167,78 @@ export function Clubs() {
           </Card>
         </motion.div>
 
-        {/* Projects Showcase */}
+        {/* Active Members Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Active Aero Club Members
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Meet our passionate team driving innovation and excellence in aerospace engineering
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {members.map((member, index) => (
+              <ClubMemberCard key={member.id} member={member} index={index} />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Project Updates Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-16"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Project Updates</h2>
+              <p className="text-gray-400">Latest progress from ongoing projects</p>
+            </div>
+            {user && (
+              <Button
+                onClick={() => setIsProjectUpdateOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Post Update
+              </Button>
+            )}
+          </div>
+          
+          {projectUpdates.length > 0 ? (
+            <div className="space-y-6">
+              {projectUpdates.map((update, index) => (
+                <ProjectUpdateCard 
+                  key={update.id} 
+                  update={update} 
+                  index={index}
+                  onImageClick={(imageUrl) => {
+                    const imageIndex = galleryImages.findIndex(img => img.url === imageUrl);
+                    if (imageIndex !== -1) {
+                      openLightbox(imageIndex);
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardContent className="p-12 text-center">
+                <Rocket className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                <p className="text-gray-400">No project updates yet. Be the first to share!</p>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+
+        {/* Featured Projects Showcase */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -145,34 +281,87 @@ export function Clubs() {
           </div>
         </motion.div>
 
-        {/* Gallery */}
+        {/* Photo Gallery */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-3xl font-bold mb-8 text-center">Gallery</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {gallery.map((image, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="relative h-64 rounded-lg overflow-hidden group cursor-pointer"
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Photo Gallery</h2>
+              <p className="text-gray-400">Memories from our events and activities</p>
+            </div>
+            {user && (
+              <Button
+                onClick={() => setIsGalleryUploadOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                <img
-                  src={image}
-                  alt={`Gallery ${index + 1}`}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/20 transition-all duration-300" />
-              </motion.div>
-            ))}
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Photo
+              </Button>
+            )}
           </div>
+          
+          {galleryImages.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {galleryImages.map((image, index) => (
+                <motion.div
+                  key={image.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="relative h-64 rounded-lg overflow-hidden group cursor-pointer"
+                  onClick={() => openLightbox(index)}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.caption}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm font-semibold">{image.caption}</p>
+                      <p className="text-blue-400 text-xs">{image.eventTag}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardContent className="p-12 text-center">
+                <Upload className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+                <p className="text-gray-400">No photos yet. Upload your first photo!</p>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
       </div>
+
+      {/* Dialogs */}
+      <GalleryUploadForm
+        isOpen={isGalleryUploadOpen}
+        onClose={() => setIsGalleryUploadOpen(false)}
+        onUpload={handleGalleryUpload}
+        userEmail={user?.email}
+      />
+
+      <ProjectUpdateForm
+        isOpen={isProjectUpdateOpen}
+        onClose={() => setIsProjectUpdateOpen(false)}
+        onSubmit={handleProjectUpdate}
+        userEmail={user?.email}
+      />
+
+      {/* Lightbox */}
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 }
