@@ -73,6 +73,13 @@ export function Navbar() {
                     </Button>
                   </Link>
                 )}
+                {user.role === 'student' && (
+                  <Link to="/portal">
+                    <Button variant="outline" size="sm">
+                      Portal
+                    </Button>
+                  </Link>
+                )}
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4" />
                   <span className="text-sm">{user.name}</span>
@@ -129,6 +136,13 @@ export function Navbar() {
                     <Link to="/admin" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" size="sm" className="w-full">
                         Admin Dashboard
+                      </Button>
+                    </Link>
+                  )}
+                  {user.role === 'student' && (
+                    <Link to="/portal" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        Portal
                       </Button>
                     </Link>
                   )}

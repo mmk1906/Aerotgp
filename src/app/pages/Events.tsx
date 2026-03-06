@@ -31,8 +31,24 @@ export function Events() {
   };
 
   const confirmRegistration = () => {
-    if (selectedEvent) {
+    if (selectedEvent && user) {
+      // Save registration to localStorage
+      const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
+      const newRegistration = {
+        id: Date.now().toString(),
+        userId: user.id,
+        eventId: selectedEvent.id,
+        status: 'pending',
+        paymentStatus: selectedEvent.isPaid ? 'pending' : 'completed',
+        registeredAt: new Date().toISOString(),
+      };
+      registrations.push(newRegistration);
+      localStorage.setItem('userRegistrations', JSON.stringify(registrations));
+      
       toast.success(`Successfully registered for ${selectedEvent.title}!`);
+      if (selectedEvent.isPaid) {
+        toast.info('Redirecting to payment gateway...');
+      }
       setSelectedEvent(null);
     }
   };

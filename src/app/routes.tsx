@@ -13,6 +13,13 @@ import { JoinAeroClub } from './pages/JoinAeroClub';
 import { Blogs } from './pages/Blogs';
 import { BlogCreate } from './pages/BlogCreate';
 import { BlogView } from './pages/BlogView';
+import { PortalLayout } from './components/PortalLayout';
+import { StudentDashboard } from './pages/StudentDashboard';
+import { ProfileManagement } from './pages/ProfileManagement';
+import { MyEvents } from './pages/MyEvents';
+import { MyBlogs } from './pages/MyBlogs';
+import { PortalTests } from './pages/PortalTests';
+import { PortalAeroClub } from './pages/PortalAeroClub';
 
 export const router = createBrowserRouter([
   {
@@ -33,6 +40,18 @@ export const router = createBrowserRouter([
       { path: 'login', Component: Login },
       { path: 'admin', Component: AdminDashboard },
       { path: 'join-aero-club', Component: JoinAeroClub },
+    ],
+  },
+  {
+    path: '/portal',
+    Component: PortalLayout,
+    children: [
+      { index: true, Component: StudentDashboard },
+      { path: 'profile', Component: ProfileManagement },
+      { path: 'my-events', Component: MyEvents },
+      { path: 'my-blogs', Component: MyBlogs },
+      { path: 'tests', Component: PortalTests },
+      { path: 'aero-club', Component: PortalAeroClub },
     ],
   },
 ]);

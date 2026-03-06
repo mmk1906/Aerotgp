@@ -12,7 +12,7 @@ import { Plane } from 'lucide-react';
 export function Login() {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,9 +20,15 @@ export function Login() {
     const success = await login(loginData.email, loginData.password);
     if (success) {
       toast.success('Login successful!');
-      navigate('/');
+      // Redirect based on role
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      if (storedUser.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/portal');
+      }
     } else {
-      toast.error('Invalid credentials. Try admin@aero.edu / admin123');
+      toast.error('Invalid credentials. Try admin@aerotgp / admin123');
     }
   };
 
@@ -39,7 +45,7 @@ export function Login() {
     const success = await register(registerData.name, registerData.email, registerData.password);
     if (success) {
       toast.success('Registration successful!');
-      navigate('/');
+      navigate('/portal');
     } else {
       toast.error('Registration failed');
     }

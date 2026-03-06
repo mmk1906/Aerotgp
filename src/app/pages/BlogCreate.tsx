@@ -39,7 +39,7 @@ export function BlogCreate() {
     }
 
     if (isEditing) {
-      const storedBlogs = localStorage.getItem('blogs');
+      const storedBlogs = localStorage.getItem('userBlogs');
       if (storedBlogs) {
         const blogs: Blog[] = JSON.parse(storedBlogs);
         const blog = blogs.find(b => b.id === id);
@@ -89,7 +89,7 @@ export function BlogCreate() {
       return;
     }
 
-    const storedBlogs = localStorage.getItem('blogs');
+    const storedBlogs = localStorage.getItem('userBlogs');
     const blogs: Blog[] = storedBlogs ? JSON.parse(storedBlogs) : [];
 
     if (isEditing) {
@@ -107,7 +107,7 @@ export function BlogCreate() {
         }
         return blog;
       });
-      localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
+      localStorage.setItem('userBlogs', JSON.stringify(updatedBlogs));
       toast.success('Blog updated successfully!');
     } else {
       const newBlog: Blog = {
@@ -128,11 +128,11 @@ export function BlogCreate() {
       };
 
       blogs.push(newBlog);
-      localStorage.setItem('blogs', JSON.stringify(blogs));
+      localStorage.setItem('userBlogs', JSON.stringify(blogs));
       toast.success('Blog submitted for approval!');
     }
 
-    navigate('/blogs');
+    navigate('/portal/my-blogs');
   };
 
   const categories: Blog['category'][] = ['Aviation', 'Space', 'UAVs', 'Aerodynamics', 'Technology', 'Research'];
