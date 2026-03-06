@@ -187,7 +187,7 @@ export const mockFaculty: Faculty[] = [
     qualification: '--',
     specialization: '--',
     email: 'pankaj.aeronautical@tgpcet.com',
-    photo: '',
+    photo: 'https://i.postimg.cc/RVfqChZt/Pankaj-Ramteke.jpg',
     
   },
 ];
