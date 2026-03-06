@@ -219,6 +219,87 @@ export const getPendingGalleryPhotos = () =>
   getCollection<GalleryPhoto>('gallery', [where('status', '==', 'pending')]);
 
 // Club operations
+export interface Club {
+  id?: string;
+  name: string;
+  slug: string; // URL-friendly name (e.g., "aero-club")
+  description: string;
+  shortDescription?: string;
+  logo?: string;
+  banner?: string;
+  facultyCoordinator?: string;
+  establishedYear?: string;
+  memberCount?: number;
+  achievements?: string[];
+  category?: string;
+  status?: 'active' | 'inactive';
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface ClubProject {
+  id?: string;
+  clubId: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  status?: 'ongoing' | 'completed';
+  progress?: number;
+  teamMembers?: string[];
+  startDate?: string;
+  endDate?: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface ClubApplication {
+  id?: string;
+  clubId: string;
+  clubName: string;
+  userId?: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  department: string;
+  year: string;
+  skills: string;
+  experience?: string;
+  motivation: string;
+  portfolio?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export const createClub = (data: Club) => createDocument('clubs', data);
+export const getClub = (clubId: string) => getDocument<Club>('clubs', clubId);
+export const getClubBySlug = async (slug: string): Promise<Club | null> => {
+  const clubs = await getCollection<Club>('clubs', [where('slug', '==', slug)]);
+  return clubs.length > 0 ? clubs[0] : null;
+};
+export const updateClub = (clubId: string, data: Partial<Club>) => 
+  updateDocument('clubs', clubId, data);
+export const deleteClub = (clubId: string) => deleteDocument('clubs', clubId);
+export const getAllClubs = () => getCollection<Club>('clubs');
+export const getActiveClubs = () => 
+  getCollection<Club>('clubs', [where('status', '==', 'active')]);
+
+export const createClubProject = (data: ClubProject) => createDocument('clubProjects', data);
+export const getClubProjects = (clubId: string) => 
+  getCollection<ClubProject>('clubProjects', [where('clubId', '==', clubId)]);
+export const updateClubProject = (projectId: string, data: Partial<ClubProject>) => 
+  updateDocument('clubProjects', projectId, data);
+export const deleteClubProject = (projectId: string) => deleteDocument('clubProjects', projectId);
+
+export const createClubApplication = (data: ClubApplication) => 
+  createDocument('clubApplications', data);
+export const getClubApplications = (clubId?: string) => 
+  clubId 
+    ? getCollection<ClubApplication>('clubApplications', [where('clubId', '==', clubId)])
+    : getCollection<ClubApplication>('clubApplications');
+export const updateClubApplication = (applicationId: string, data: Partial<ClubApplication>) => 
+  updateDocument('clubApplications', applicationId, data);
+
 export interface ClubMember {
   id?: string;
   userId: string;

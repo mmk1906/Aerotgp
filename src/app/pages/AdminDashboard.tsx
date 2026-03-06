@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
 import { BlogManagementTab } from '../components/BlogManagementTab';
-import { ClubManagementTab } from '../components/ClubManagementTab';
+import { ClubManagementSimplified as ClubManagementTab } from '../components/ClubManagementSimplified';
 import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { FacultyManagement } from '../components/FacultyManagement';
 import { WebsiteContentManagement } from '../components/WebsiteContentManagement';

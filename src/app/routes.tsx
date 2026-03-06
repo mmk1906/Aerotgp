@@ -4,6 +4,8 @@ import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { Faculty } from './pages/Faculty';
 import { Clubs } from './pages/Clubs';
+import { ClubsDirectory } from './pages/ClubsDirectory';
+import { ClubDetail } from './pages/ClubDetail';
 import { Academics } from './pages/Academics';
 import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
@@ -32,7 +34,8 @@ export const router = createBrowserRouter([
       { index: true, Component: Home },
       { path: 'about', Component: About },
       { path: 'faculty', Component: Faculty },
-      { path: 'clubs', Component: Clubs },
+      { path: 'clubs', Component: ClubsDirectory },
+      { path: 'clubs/:slug', Component: ClubDetail },
       { path: 'academics', Component: Academics },
       { path: 'contact', Component: Contact },
       { path: 'events', Component: Events },

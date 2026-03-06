@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { toast } from 'sonner';
 import { 
   Rocket, 
@@ -21,210 +22,179 @@ import {
   Eye
 } from 'lucide-react';
 import { 
-  ClubMember, 
-  GalleryImage, 
-  ProjectUpdate, 
+  getAllClubs,
+  createClub,
+  updateClub,
+  deleteClub,
+  getClubApplications,
+  updateClubApplication,
   Club,
-  mockClubMembers,
-  mockGalleryImages,
-  mockProjectUpdates,
-  mockClubs
-} from '../data/clubData';
+  ClubApplication
+} from '../services/databaseService';
+import { CloudinaryImageUploader } from './CloudinaryImageUploader';
+import type { CloudinaryUploadResult } from '../services/cloudinaryService';
 
 export function ClubManagementTab() {
-  const [clubs, setClubs] = useState<Club[]>(mockClubs);
-  const [members, setMembers] = useState<ClubMember[]>(mockClubMembers);
-  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
-  const [projectUpdates, setProjectUpdates] = useState<ProjectUpdate[]>([]);
-  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [applications, setApplications] = useState<ClubApplication[]>([]);
+  const [selectedApplication, setSelectedApplication] = useState<ClubApplication | null>(null);
   const [isClubDialogOpen, setIsClubDialogOpen] = useState(false);
-  const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false);
   const [editingClub, setEditingClub] = useState<Club | null>(null);
-  const [editingMember, setEditingMember] = useState<ClubMember | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [clubForm, setClubForm] = useState({
     name: '',
+    slug: '',
     description: '',
+    shortDescription: '',
     logo: '',
+    banner: '',
     facultyCoordinator: '',
     memberCount: 0,
     establishedYear: '',
-  });
-
-  const [memberForm, setMemberForm] = useState({
-    name: '',
-    photo: '',
-    designation: '',
-    areaOfInterest: '',
-    email: '',
-    year: '',
+    achievements: [] as string[],
+    status: 'active' as 'active' | 'inactive',
   });
 
   useEffect(() => {
-    // Load data from localStorage
-    const storedGallery = localStorage.getItem('clubGallery');
-    if (storedGallery) {
-      setGalleryImages(JSON.parse(storedGallery));
-    } else {
-      localStorage.setItem('clubGallery', JSON.stringify(mockGalleryImages));
-      setGalleryImages(mockGalleryImages);
-    }
-
-    const storedProjects = localStorage.getItem('projectUpdates');
-    if (storedProjects) {
-      setProjectUpdates(JSON.parse(storedProjects));
-    } else {
-      localStorage.setItem('projectUpdates', JSON.stringify(mockProjectUpdates));
-      setProjectUpdates(mockProjectUpdates);
-    }
-
-    const storedMembers = localStorage.getItem('clubMembers');
-    if (storedMembers) {
-      setMembers(JSON.parse(storedMembers));
-    } else {
-      localStorage.setItem('clubMembers', JSON.stringify(mockClubMembers));
-    }
-
-    const storedClubs = localStorage.getItem('clubs');
-    if (storedClubs) {
-      setClubs(JSON.parse(storedClubs));
-    } else {
-      localStorage.setItem('clubs', JSON.stringify(mockClubs));
-    }
+    loadClubs();
+    loadApplications();
   }, []);
 
-  const handleApproveImage = (imageId: string) => {
-    const updatedImages = galleryImages.map(img =>
-      img.id === imageId ? { ...img, status: 'approved' as const } : img
-    );
-    setGalleryImages(updatedImages);
-    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
-    toast.success('Image approved successfully!');
+  const loadClubs = async () => {
+    try {
+      setLoading(true);
+      const fetchedClubs = await getAllClubs();
+      setClubs(fetchedClubs);
+    } catch (error) {
+      console.error('Error loading clubs:', error);
+      toast.error('Failed to load clubs');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRejectImage = (imageId: string) => {
-    const updatedImages = galleryImages.map(img =>
-      img.id === imageId ? { ...img, status: 'rejected' as const } : img
-    );
-    setGalleryImages(updatedImages);
-    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
-    toast.success('Image rejected!');
+  const loadApplications = async () => {
+    try {
+      const fetchedApplications = await getClubApplications();
+      setApplications(fetchedApplications);
+    } catch (error) {
+      console.error('Error loading applications:', error);
+      toast.error('Failed to load applications');
+    }
   };
 
-  const handleDeleteImage = (imageId: string) => {
-    const updatedImages = galleryImages.filter(img => img.id !== imageId);
-    setGalleryImages(updatedImages);
-    localStorage.setItem('clubGallery', JSON.stringify(updatedImages));
-    toast.success('Image deleted!');
-  };
-
-  const handleDeleteProject = (projectId: string) => {
-    const updatedProjects = projectUpdates.filter(p => p.id !== projectId);
-    setProjectUpdates(updatedProjects);
-    localStorage.setItem('projectUpdates', JSON.stringify(updatedProjects));
-    toast.success('Project update deleted!');
-  };
-
-  const handleSaveClub = () => {
-    if (!clubForm.name || !clubForm.description) {
+  const handleCreateOrUpdateClub = async () => {
+    if (!clubForm.name || !clubForm.slug || !clubForm.description) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    if (editingClub) {
-      const updatedClubs = clubs.map(c =>
-        c.id === editingClub.id ? { ...c, ...clubForm } : c
-      );
-      setClubs(updatedClubs);
-      localStorage.setItem('clubs', JSON.stringify(updatedClubs));
-      toast.success('Club updated successfully!');
-    } else {
-      const newClub: Club = {
-        id: Date.now().toString(),
-        ...clubForm,
-      };
-      const updatedClubs = [...clubs, newClub];
-      setClubs(updatedClubs);
-      localStorage.setItem('clubs', JSON.stringify(updatedClubs));
-      toast.success('Club created successfully!');
+    try {
+      if (editingClub) {
+        // Update existing club
+        await updateClub(editingClub.id!, clubForm);
+        toast.success('Club updated successfully!');
+      } else {
+        // Create new club
+        await createClub(clubForm);
+        toast.success('Club created successfully!');
+      }
+      
+      // Reload clubs and reset form
+      await loadClubs();
+      setIsClubDialogOpen(false);
+      resetClubForm();
+    } catch (error) {
+      console.error('Error saving club:', error);
+      toast.error('Failed to save club');
     }
-
-    setIsClubDialogOpen(false);
-    setEditingClub(null);
-    setClubForm({
-      name: '',
-      description: '',
-      logo: '',
-      facultyCoordinator: '',
-      memberCount: 0,
-      establishedYear: '',
-    });
-  };
-
-  const handleSaveMember = () => {
-    if (!memberForm.name || !memberForm.designation || !memberForm.areaOfInterest) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-
-    if (editingMember) {
-      const updatedMembers = members.map(m =>
-        m.id === editingMember.id ? { ...m, ...memberForm } : m
-      );
-      setMembers(updatedMembers);
-      localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
-      toast.success('Member updated successfully!');
-    } else {
-      const newMember: ClubMember = {
-        id: Date.now().toString(),
-        ...memberForm,
-      };
-      const updatedMembers = [...members, newMember];
-      setMembers(updatedMembers);
-      localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
-      toast.success('Member added successfully!');
-    }
-
-    setIsMemberDialogOpen(false);
-    setEditingMember(null);
-    setMemberForm({
-      name: '',
-      photo: '',
-      designation: '',
-      areaOfInterest: '',
-      email: '',
-      year: '',
-    });
   };
 
   const handleEditClub = (club: Club) => {
     setEditingClub(club);
-    setClubForm(club);
+    setClubForm({
+      name: club.name,
+      slug: club.slug,
+      description: club.description,
+      shortDescription: club.shortDescription || '',
+      logo: club.logo || '',
+      banner: club.banner || '',
+      facultyCoordinator: club.facultyCoordinator || '',
+      memberCount: club.memberCount || 0,
+      establishedYear: club.establishedYear || '',
+      achievements: club.achievements || [],
+      status: club.status || 'active',
+    });
     setIsClubDialogOpen(true);
   };
 
-  const handleDeleteClub = (clubId: string) => {
-    const updatedClubs = clubs.filter(c => c.id !== clubId);
-    setClubs(updatedClubs);
-    localStorage.setItem('clubs', JSON.stringify(updatedClubs));
-    toast.success('Club deleted!');
+  const handleDeleteClub = async (clubId: string) => {
+    if (!confirm('Are you sure you want to delete this club?')) return;
+
+    try {
+      await deleteClub(clubId);
+      toast.success('Club deleted successfully!');
+      await loadClubs();
+    } catch (error) {
+      console.error('Error deleting club:', error);
+      toast.error('Failed to delete club');
+    }
   };
 
-  const handleEditMember = (member: ClubMember) => {
-    setEditingMember(member);
-    setMemberForm(member);
-    setIsMemberDialogOpen(true);
+  const resetClubForm = () => {
+    setEditingClub(null);
+    setClubForm({
+      name: '',
+      slug: '',
+      description: '',
+      shortDescription: '',
+      logo: '',
+      banner: '',
+      facultyCoordinator: '',
+      memberCount: 0,
+      establishedYear: '',
+      achievements: [],
+      status: 'active',
+    });
   };
 
-  const handleDeleteMember = (memberId: string) => {
-    const updatedMembers = members.filter(m => m.id !== memberId);
-    setMembers(updatedMembers);
-    localStorage.setItem('clubMembers', JSON.stringify(updatedMembers));
-    toast.success('Member removed!');
+  const handleApproveApplication = async (applicationId: string) => {
+    try {
+      await updateClubApplication(applicationId, { status: 'approved' });
+      toast.success('Application approved!');
+      await loadApplications();
+    } catch (error) {
+      console.error('Error approving application:', error);
+      toast.error('Failed to approve application');
+    }
   };
 
-  const pendingImages = galleryImages.filter(img => img.status === 'pending');
-  const approvedImages = galleryImages.filter(img => img.status === 'approved');
+  const handleRejectApplication = async (applicationId: string) => {
+    try {
+      await updateClubApplication(applicationId, { status: 'rejected' });
+      toast.success('Application rejected!');
+      await loadApplications();
+    } catch (error) {
+      console.error('Error rejecting application:', error);
+      toast.error('Failed to reject application');
+    }
+  };
+
+  const handleLogoUpload = (result: CloudinaryUploadResult) => {
+    setClubForm({ ...clubForm, logo: result.secure_url });
+    toast.success('Logo uploaded successfully!');
+  };
+
+  const handleBannerUpload = (result: CloudinaryUploadResult) => {
+    setClubForm({ ...clubForm, banner: result.secure_url });
+    toast.success('Banner uploaded successfully!');
+  };
+
+  const handleNameChange = (name: string) => {
+    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    setClubForm({ ...clubForm, name, slug });
+  };
 
   return (
     <div className="space-y-6">
@@ -595,9 +565,18 @@ export function ClubManagementTab() {
               <Label>Club Name *</Label>
               <Input
                 value={clubForm.name}
-                onChange={(e) => setClubForm({ ...clubForm, name: e.target.value })}
+                onChange={(e) => handleNameChange(e.target.value)}
                 className="bg-slate-800 border-slate-700"
                 placeholder="Enter club name"
+              />
+            </div>
+            <div>
+              <Label>Slug</Label>
+              <Input
+                value={clubForm.slug}
+                onChange={(e) => setClubForm({ ...clubForm, slug: e.target.value })}
+                className="bg-slate-800 border-slate-700"
+                placeholder="Enter club slug"
               />
             </div>
             <div>
@@ -610,12 +589,28 @@ export function ClubManagementTab() {
               />
             </div>
             <div>
-              <Label>Logo URL</Label>
-              <Input
-                value={clubForm.logo}
-                onChange={(e) => setClubForm({ ...clubForm, logo: e.target.value })}
+              <Label>Short Description</Label>
+              <Textarea
+                value={clubForm.shortDescription}
+                onChange={(e) => setClubForm({ ...clubForm, shortDescription: e.target.value })}
                 className="bg-slate-800 border-slate-700"
-                placeholder="https://example.com/logo.png"
+                placeholder="Enter short description"
+              />
+            </div>
+            <div>
+              <Label>Logo URL</Label>
+              <CloudinaryImageUploader
+                onUpload={handleLogoUpload}
+                currentUrl={clubForm.logo}
+                className="bg-slate-800 border-slate-700"
+              />
+            </div>
+            <div>
+              <Label>Banner URL</Label>
+              <CloudinaryImageUploader
+                onUpload={handleBannerUpload}
+                currentUrl={clubForm.banner}
+                className="bg-slate-800 border-slate-700"
               />
             </div>
             <div>
@@ -649,7 +644,7 @@ export function ClubManagementTab() {
             </div>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setIsClubDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleSaveClub} className="bg-blue-600 hover:bg-blue-700">Save</Button>
+              <Button onClick={handleCreateOrUpdateClub} className="bg-blue-600 hover:bg-blue-700">Save</Button>
             </div>
           </div>
         </DialogContent>
