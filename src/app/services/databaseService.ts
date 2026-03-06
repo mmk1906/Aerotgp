@@ -124,6 +124,8 @@ export interface Event {
   maxParticipants: number;
   registrationDeadline: string;
   imageUrl?: string;
+  image?: string; // Legacy support
+  registeredCount?: number;
   category?: string;
   status?: 'upcoming' | 'ongoing' | 'completed';
   createdAt?: any;

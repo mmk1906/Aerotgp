@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { mockEvents, mockRegistrations, Event } from '../data/mockData';
 import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, CheckCircle, XCircle, Rocket, Eye, BookOpen, Clock, Image as ImageIcon, UserIcon as UserCheck, FileText, Settings as SettingsIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
@@ -23,6 +22,16 @@ import { FacultyManagement } from '../components/FacultyManagement';
 import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
 import { AdminSettings } from '../components/AdminSettings';
 import { DataExportTab } from '../components/DataExportTab';
+import { 
+  getAllEvents, 
+  createEvent,
+  updateEvent,
+  deleteEvent as deleteEventFromDb,
+  getCollection,
+  updateEventRegistration,
+  Event,
+  EventRegistration
+} from '../services/databaseService';
 
 interface AeroClubApplication {
   id: string;
@@ -44,8 +53,8 @@ interface AeroClubApplication {
 export function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [events, setEvents] = useState(mockEvents);
-  const [registrations, setRegistrations] = useState(mockRegistrations);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [applications, setApplications] = useState<AeroClubApplication[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<AeroClubApplication | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -76,6 +85,12 @@ export function AdminDashboard() {
     if (storedAttempts) {
       setTestAttempts(JSON.parse(storedAttempts));
     }
+
+    // Fetch events from database
+    getAllEvents().then(setEvents);
+
+    // Fetch registrations from database
+    getCollection<EventRegistration>('registrations').then(setRegistrations);
   }, []);
 
   // Safety check - ProtectedRoute wrapper should prevent this
@@ -110,42 +125,50 @@ export function AdminDashboard() {
       image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
     };
 
-    setEvents([...events, event]);
-    setIsCreateDialogOpen(false);
-    setNewEvent({
-      title: '',
-      description: '',
-      date: '',
-      venue: '',
-      isPaid: false,
-      price: 0,
-      maxParticipants: 50,
-      registrationDeadline: '',
+    createEvent(event).then(() => {
+      setEvents([...events, event]);
+      setIsCreateDialogOpen(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        date: '',
+        venue: '',
+        isPaid: false,
+        price: 0,
+        maxParticipants: 50,
+        registrationDeadline: '',
+      });
+      toast.success('Event created successfully!');
     });
-    toast.success('Event created successfully!');
   };
 
   const handleDeleteEvent = (id: string) => {
-    setEvents(events.filter((e) => e.id !== id));
-    toast.success('Event deleted successfully!');
+    deleteEventFromDb(id).then(() => {
+      setEvents(events.filter((e) => e.id !== id));
+      toast.success('Event deleted successfully!');
+    });
   };
 
   const handleApproveRegistration = (id: string) => {
-    setRegistrations(
-      registrations.map((r) =>
-        r.id === id ? { ...r, approvalStatus: 'approved' } : r
-      )
-    );
-    toast.success('Registration approved!');
+    updateEventRegistration(id, { approvalStatus: 'approved' }).then(() => {
+      setRegistrations(
+        registrations.map((r) =>
+          r.id === id ? { ...r, approvalStatus: 'approved' } : r
+        )
+      );
+      toast.success('Registration approved!');
+    });
   };
 
   const handleRejectRegistration = (id: string) => {
-    setRegistrations(
-      registrations.map((r) =>
-        r.id === id ? { ...r, approvalStatus: 'rejected' } : r
-      )
-    );
-    toast.success('Registration rejected!');
+    updateEventRegistration(id, { approvalStatus: 'rejected' }).then(() => {
+      setRegistrations(
+        registrations.map((r) =>
+          r.id === id ? { ...r, approvalStatus: 'rejected' } : r
+        )
+      );
+      toast.success('Registration rejected!');
+    });
   };
 
   const exportRegistrations = () => {
@@ -353,31 +376,31 @@ export function AdminDashboard() {
                         <TableRow key={reg.id}>
                           <TableCell>
                             <div>
-                              <div className="font-semibold">{reg.studentName}</div>
-                              <div className="text-sm text-gray-400">{reg.studentEmail}</div>
+                              <div className="font-semibold">{reg.userName}</div>
+                              <div className="text-sm text-gray-400">{reg.userEmail}</div>
                             </div>
                           </TableCell>
-                          <TableCell>{event?.title}</TableCell>
+                          <TableCell>{event?.title || 'N/A'}</TableCell>
                           <TableCell>
-                            {new Date(reg.timestamp).toLocaleDateString()}
+                            {reg.createdAt && new Date(reg.createdAt.seconds * 1000).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                reg.approvalStatus === 'approved'
+                                reg.status === 'approved'
                                   ? 'default'
-                                  : reg.approvalStatus === 'rejected'
+                                  : reg.status === 'rejected'
                                   ? 'destructive'
                                   : 'secondary'
                               }
                             >
-                              {reg.approvalStatus}
+                              {reg.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <Badge
                               variant={
-                                reg.paymentStatus === 'paid'
+                                reg.paymentStatus === 'completed'
                                   ? 'default'
                                   : reg.paymentStatus === 'pending'
                                   ? 'secondary'
@@ -389,19 +412,19 @@ export function AdminDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
-                              {reg.approvalStatus === 'pending' && (
+                              {reg.status === 'pending' && (
                                 <>
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleApproveRegistration(reg.id)}
+                                    onClick={() => handleApproveRegistration(reg.id!)}
                                   >
                                     <CheckCircle className="w-4 h-4" />
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="destructive"
-                                    onClick={() => handleRejectRegistration(reg.id)}
+                                    onClick={() => handleRejectRegistration(reg.id!)}
                                   >
                                     <XCircle className="w-4 h-4" />
                                   </Button>

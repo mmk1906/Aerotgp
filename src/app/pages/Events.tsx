@@ -1,55 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { Calendar, MapPin, Users, DollarSign, Clock } from 'lucide-react';
-import { mockEvents } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { getAllEvents, createEventRegistration, Event } from '../services/databaseService';
 
 export function Events() {
-  const [selectedEvent, setSelectedEvent] = useState<typeof mockEvents[0] | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Load events from Firebase
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const fetchedEvents = await getAllEvents();
+      setEvents(fetchedEvents);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      toast.error('Failed to load events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredEvents =
     filter === 'all'
-      ? mockEvents
-      : mockEvents.filter((e) => e.status === filter);
+      ? events
+      : events.filter((e) => e.status === filter);
 
-  const handleRegister = (event: typeof mockEvents[0]) => {
+  const handleRegister = async (event: Event) => {
     if (!user) {
       toast.error('Please login to register for events');
       navigate('/login');
       return;
     }
+
     setSelectedEvent(event);
   };
 
-  const confirmRegistration = () => {
-    if (selectedEvent && user) {
-      // Save registration to localStorage
-      const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
-      const newRegistration = {
-        id: Date.now().toString(),
+  const confirmRegistration = async () => {
+    if (!selectedEvent || !user) return;
+
+    try {
+      await createEventRegistration({
         userId: user.id,
-        eventId: selectedEvent.id,
+        eventId: selectedEvent.id!,
+        userName: user.name,
+        userEmail: user.email,
+        userPhone: user.phone,
         status: 'pending',
         paymentStatus: selectedEvent.isPaid ? 'pending' : 'completed',
-        registeredAt: new Date().toISOString(),
-      };
-      registrations.push(newRegistration);
-      localStorage.setItem('userRegistrations', JSON.stringify(registrations));
-      
-      toast.success(`Successfully registered for ${selectedEvent.title}!`);
-      if (selectedEvent.isPaid) {
-        toast.info('Redirecting to payment gateway...');
-      }
+      });
+
+      toast.success('Registration submitted! Awaiting admin approval.');
       setSelectedEvent(null);
+      
+      // Reload events to update registration count
+      loadEvents();
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      toast.error('Failed to register. Please try again.');
     }
   };
 
@@ -100,15 +123,8 @@ export function Events() {
                 <div className="relative h-48">
                   <img
                     src={
-                      event.title === 'Cadthon'
-                        ? 'https://images.unsplash.com/photo-1600869009498-8d429f88d4f5?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2FkfGVufDB8fDB8fHww'
-                        : event.title === 'Aero Modelling'
-                        ? 'https://images.unsplash.com/photo-1640597197192-21ef933062d7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8YWVyb21vZGVsbGluZ3xlbnwwfHwwfHx8MA%3D%3D'
-                        : event.title === 'Slide war'
-                        ? 'https://images.unsplash.com/photo-1733222765056-b0790217baa9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcmVzZW50YXRpb24lMjBzbGlkZXNob3clMjBjb21wZXRpdGlvbnxlbnwxfHx8fDE3NzI3MjcwMjh8MA&ixlib=rb-4.1.0&q=80&w=1080'
-                        : event.title === 'E-Sports'
-                        ? 'https://images.unsplash.com/photo-1772587003187-65b32c91df91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlc3BvcnRzJTIwZ2FtaW5nJTIwY29tcGV0aXRpb258ZW58MXx8fHwxNzcyNjQzNDIzfDA&ixlib=rb-4.1.0&q=80&w=1080'
-                        : event.image
+                      event.imageUrl || event.image || 
+                      'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80'
                     }
                     alt={event.title}
                     className="w-full h-full object-cover"
@@ -147,7 +163,7 @@ export function Events() {
                     <div className="flex items-center space-x-2 text-sm text-gray-400">
                       <Users className="w-4 h-4 text-blue-500" />
                       <span>
-                        {event.registeredCount}/{event.maxParticipants} registered
+                        {event.registeredCount || 0}/{event.maxParticipants} registered
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -161,13 +177,13 @@ export function Events() {
                     onClick={() => handleRegister(event)}
                     disabled={
                       event.status === 'completed' ||
-                      event.registeredCount >= event.maxParticipants
+                      (event.registeredCount || 0) >= event.maxParticipants
                     }
                     className="w-full"
                   >
                     {event.status === 'completed'
                       ? 'Event Completed'
-                      : event.registeredCount >= event.maxParticipants
+                      : (event.registeredCount || 0) >= event.maxParticipants
                       ? 'Fully Booked'
                       : 'Register Now'}
                   </Button>
