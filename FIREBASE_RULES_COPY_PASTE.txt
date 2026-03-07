@@ -1,0 +1,201 @@
+==========================================
+FIRESTORE DATABASE RULES
+==========================================
+
+Go to: Firebase Console → Firestore Database → Rules
+Click "Edit rules" and paste this:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Events collection
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Event Registrations
+    match /registrations/{registrationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || isOwner(resource.data.userId);
+      allow delete: if isAdmin();
+    }
+    
+    // Blogs
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.authorId || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    // Gallery Photos
+    match /gallery/{photoId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Club Members
+    match /clubMembers/{memberId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Clubs collection
+    match /clubs/{clubId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // MCQ Tests
+    match /tests/{testId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    // Test Results
+    match /testResults/{resultId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Faculty collection
+    match /faculty/{facultyId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Courses collection
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
+
+
+==========================================
+FIREBASE STORAGE RULES
+==========================================
+
+Go to: Firebase Console → Storage → Rules
+Click "Edit rules" and paste this:
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    function isValidImageSize() {
+      return request.resource.size < 5 * 1024 * 1024;
+    }
+    
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId) && isValidImage() && isValidImageSize();
+    }
+    
+    match /events/{eventId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidImage() && isValidImageSize();
+    }
+    
+    match /blogs/{blogId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage() && isValidImageSize();
+    }
+    
+    match /gallery/{category}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage() && isValidImageSize();
+    }
+    
+    match /club/projects/{projectId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && isValidImage() && isValidImageSize();
+    }
+  }
+}
+
+
+==========================================
+STEPS TO APPLY
+==========================================
+
+1. Go to Firebase Console: https://console.firebase.google.com/
+2. Select your project: aerotgp-e5700
+3. Apply Firestore Rules:
+   - Click "Firestore Database" in sidebar
+   - Click "Rules" tab
+   - Copy FIRESTORE DATABASE RULES section above
+   - Click "Publish"
+   
+4. Apply Storage Rules:
+   - Click "Storage" in sidebar
+   - Click "Rules" tab
+   - Copy FIREBASE STORAGE RULES section above
+   - Click "Publish"
+
+5. Done! All permission errors should be fixed.
+
+
+==========================================
+WHAT WAS FIXED
+==========================================
+
+✅ Added missing "clubs" collection read permissions
+✅ Fixed "blogs" collection read permissions (was blocking public access)
+✅ Fixed "gallery" collection read permissions (was checking non-existent fields)
+✅ Added "faculty" collection permissions
+✅ Added "courses" collection permissions
+✅ All public data (events, blogs, clubs, gallery, faculty, courses) now readable by everyone
+✅ Sensitive data (users, registrations, tests) still protected and requires authentication
+✅ Admin-only write permissions still enforced
+
+All errors should now be resolved! 🎉

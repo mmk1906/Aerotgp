@@ -102,9 +102,12 @@ export function AdminDashboard() {
     totalStudents: 500,
     totalEvents: events.length,
     totalRegistrations: registrations.length,
-    revenue: events
-      .filter((e) => e.isPaid)
-      .reduce((sum, e) => sum + (e.price || 0) * e.registeredCount, 0),
+    revenue: registrations
+      .filter((r) => r.paymentStatus === 'completed')
+      .reduce((sum, r) => {
+        const event = events.find(e => e.id === r.eventId);
+        return sum + (event?.price || 0);
+      }, 0),
     clubApplications: applications.length,
     pendingApplications: applications.filter(app => app.status === 'pending').length,
     totalQuizzes: quizzes.length,
@@ -366,6 +369,8 @@ export function AdminDashboard() {
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Payment</TableHead>
+                      <TableHead>Payment ID</TableHead>
+                      <TableHead>Amount</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -378,11 +383,16 @@ export function AdminDashboard() {
                             <div>
                               <div className="font-semibold">{reg.userName}</div>
                               <div className="text-sm text-gray-400">{reg.userEmail}</div>
+                              {reg.userPhone && (
+                                <div className="text-xs text-gray-500">{reg.userPhone}</div>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>{event?.title || 'N/A'}</TableCell>
                           <TableCell>
-                            {reg.createdAt && new Date(reg.createdAt.seconds * 1000).toLocaleDateString()}
+                            {reg.registrationDate 
+                              ? new Date(reg.registrationDate).toLocaleDateString()
+                              : reg.createdAt && new Date(reg.createdAt.seconds * 1000).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -402,13 +412,29 @@ export function AdminDashboard() {
                               variant={
                                 reg.paymentStatus === 'completed'
                                   ? 'default'
-                                  : reg.paymentStatus === 'pending'
-                                  ? 'secondary'
-                                  : 'outline'
+                                  : reg.paymentStatus === 'failed'
+                                  ? 'destructive'
+                                  : 'secondary'
                               }
                             >
                               {reg.paymentStatus}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {reg.paymentId ? (
+                              <div className="text-xs font-mono text-gray-400">
+                                {reg.paymentId.substring(0, 12)}...
+                              </div>
+                            ) : (
+                              <span className="text-gray-500">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {event?.isPaid ? (
+                              <span className="font-semibold text-green-400">₹{event.price}</span>
+                            ) : (
+                              <span className="text-gray-500">Free</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">

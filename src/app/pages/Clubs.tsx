@@ -10,14 +10,19 @@ import { GalleryUploadForm } from '../components/GalleryUploadForm';
 import { ProjectUpdateForm } from '../components/ProjectUpdateForm';
 import { ImageLightbox } from '../components/ImageLightbox';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
 import { 
   mockClubMembers, 
-  mockGalleryImages, 
   mockProjectUpdates,
   ClubMember,
   GalleryImage,
   ProjectUpdate
 } from '../data/clubData';
+import {
+  createGalleryPhoto,
+  getApprovedGalleryPhotos,
+  GalleryPhoto
+} from '../services/databaseService';
 
 export function Clubs() {
   const navigate = useNavigate();
@@ -31,18 +36,9 @@ export function Clubs() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
-    // Load gallery images from localStorage
-    const storedGallery = localStorage.getItem('clubGallery');
-    if (storedGallery) {
-      const parsed = JSON.parse(storedGallery);
-      setGalleryImages(parsed.filter((img: GalleryImage) => img.status === 'approved'));
-    } else {
-      // Initialize with mock data
-      localStorage.setItem('clubGallery', JSON.stringify(mockGalleryImages));
-      setGalleryImages(mockGalleryImages.filter(img => img.status === 'approved'));
-    }
-
-    // Load project updates from localStorage
+    loadGalleryFromFirebase();
+    
+    // Load project updates from localStorage (will migrate to Firebase later)
     const storedProjects = localStorage.getItem('projectUpdates');
     if (storedProjects) {
       setProjectUpdates(JSON.parse(storedProjects));
@@ -52,6 +48,26 @@ export function Clubs() {
       setProjectUpdates(mockProjectUpdates);
     }
   }, []);
+
+  const loadGalleryFromFirebase = async () => {
+    try {
+      const photos = await getApprovedGalleryPhotos();
+      // Convert GalleryPhoto to GalleryImage format
+      const galleryImgs: GalleryImage[] = photos.map(photo => ({
+        id: photo.id || '',
+        url: photo.imageUrl,
+        caption: photo.caption,
+        eventTag: photo.eventTag || 'Event',
+        uploadedBy: photo.uploadedBy || 'Anonymous',
+        uploadedAt: photo.uploadedAt ? new Date(photo.uploadedAt.seconds * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        status: photo.status as 'approved' | 'pending' | 'rejected',
+      }));
+      setGalleryImages(galleryImgs);
+    } catch (error) {
+      console.error('Error loading gallery from Firebase:', error);
+      toast.error('Failed to load gallery images');
+    }
+  };
 
   const projects = [
     {
@@ -71,14 +87,26 @@ export function Clubs() {
     },
   ];
 
-  const handleGalleryUpload = (newImage: GalleryImage) => {
-    const storedGallery = localStorage.getItem('clubGallery');
-    const currentGallery = storedGallery ? JSON.parse(storedGallery) : mockGalleryImages;
-    const updatedGallery = [...currentGallery, newImage];
-    localStorage.setItem('clubGallery', JSON.stringify(updatedGallery));
-    // Don't show pending images to regular users
-    if (newImage.status === 'approved') {
-      setGalleryImages(prev => [...prev, newImage]);
+  const handleGalleryUpload = async (newImage: GalleryImage) => {
+    try {
+      // Save to Firebase
+      const photoData: Omit<GalleryPhoto, 'id'> = {
+        imageUrl: newImage.url,
+        publicId: '', // Will be extracted from URL if needed
+        caption: newImage.caption,
+        eventTag: newImage.eventTag,
+        uploadedBy: newImage.uploadedBy,
+        status: 'pending', // Requires admin approval
+      };
+      
+      await createGalleryPhoto(photoData);
+      toast.success('Image uploaded successfully! Pending admin approval.');
+      
+      // Don't add to local state since it's pending approval
+      // It will appear after admin approves and page reloads
+    } catch (error) {
+      console.error('Error saving gallery photo:', error);
+      toast.error('Failed to save image to database');
     }
   };
 

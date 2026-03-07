@@ -4,16 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
-import { Calendar, MapPin, Users, DollarSign, Clock } from 'lucide-react';
+import { Calendar, MapPin, Users, DollarSign, Clock, CreditCard, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { getAllEvents, createEventRegistration, Event } from '../services/databaseService';
+import { getAllEvents, createEventRegistration, updateEventRegistration, Event } from '../services/databaseService';
+import { initiateRazorpayPayment, createRazorpayOrder, formatAmountForRazorpay, RazorpayPaymentResponse } from '../services/razorpayService';
 
 export function Events() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -55,24 +57,106 @@ export function Events() {
     if (!selectedEvent || !user) return;
 
     try {
-      await createEventRegistration({
-        userId: user.id,
-        eventId: selectedEvent.id!,
-        userName: user.name,
-        userEmail: user.email,
-        userPhone: user.phone,
-        status: 'pending',
-        paymentStatus: selectedEvent.isPaid ? 'pending' : 'completed',
-      });
+      // For free events, register directly
+      if (!selectedEvent.isPaid) {
+        await createEventRegistration({
+          userId: user.id,
+          eventId: selectedEvent.id!,
+          userName: user.name,
+          userEmail: user.email,
+          userPhone: user.phone,
+          status: 'pending',
+          paymentStatus: 'completed',
+          registrationDate: new Date().toISOString(),
+        });
 
-      toast.success('Registration submitted! Awaiting admin approval.');
-      setSelectedEvent(null);
-      
-      // Reload events to update registration count
-      loadEvents();
+        toast.success('Registration submitted! Awaiting admin approval.');
+        setSelectedEvent(null);
+        loadEvents();
+      } else {
+        // For paid events, initiate payment
+        await handlePayment();
+      }
     } catch (error) {
       console.error('Error registering for event:', error);
       toast.error('Failed to register. Please try again.');
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedEvent || !user) return;
+
+    try {
+      setProcessingPayment(true);
+
+      // Create order
+      const order = await createRazorpayOrder({
+        amount: selectedEvent.price,
+        currency: 'INR',
+        receipt: `event_${selectedEvent.id}_${user.id}`,
+        notes: {
+          eventId: selectedEvent.id,
+          userId: user.id,
+          eventTitle: selectedEvent.title,
+        },
+      });
+
+      // Initiate Razorpay payment
+      await initiateRazorpayPayment(
+        {
+          amount: formatAmountForRazorpay(selectedEvent.price),
+          currency: 'INR',
+          name: 'Aeronautical Department',
+          description: selectedEvent.title,
+          order_id: order.id,
+          prefill: {
+            name: user.name,
+            email: user.email,
+            contact: user.phone,
+          },
+          notes: {
+            eventId: selectedEvent.id,
+            userId: user.id,
+          },
+        },
+        async (response: RazorpayPaymentResponse) => {
+          // Payment success
+          try {
+            const registrationId = await createEventRegistration({
+              userId: user.id,
+              eventId: selectedEvent.id!,
+              userName: user.name,
+              userEmail: user.email,
+              userPhone: user.phone,
+              status: 'pending',
+              paymentStatus: 'completed',
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              paymentSignature: response.razorpay_signature,
+              registrationDate: new Date().toISOString(),
+            });
+
+            toast.success('Payment successful! Registration confirmed.');
+            setSelectedEvent(null);
+            setProcessingPayment(false);
+            loadEvents();
+          } catch (error) {
+            console.error('Error saving registration:', error);
+            toast.error('Payment successful but registration failed. Please contact admin.');
+            setProcessingPayment(false);
+          }
+        },
+        (error: any) => {
+          // Payment failure
+          console.error('Payment failed:', error);
+          toast.error(error.message || 'Payment failed. Please try again.');
+          setProcessingPayment(false);
+        }
+      );
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Failed to initiate payment. Please try again.');
+      setProcessingPayment(false);
     }
   };
 
@@ -236,7 +320,7 @@ export function Events() {
               <Button variant="outline" onClick={() => setSelectedEvent(null)} className="flex-1">
                 Cancel
               </Button>
-              <Button onClick={confirmRegistration} className="flex-1">
+              <Button onClick={selectedEvent?.isPaid ? handlePayment : confirmRegistration} className="flex-1">
                 {selectedEvent?.isPaid ? 'Proceed to Payment' : 'Confirm Registration'}
               </Button>
             </div>

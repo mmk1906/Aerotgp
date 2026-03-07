@@ -50,7 +50,7 @@ export const uploadToCloudinary = async (
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
-    formData.append('folder', `aerotgp/${category}`); // Organize by category
+    formData.append('folder', `aero-website/${category}`); // Organize by category in aero-website folder
     formData.append('tags', category); // Add tags for easy management
 
     // Create XMLHttpRequest for progress tracking

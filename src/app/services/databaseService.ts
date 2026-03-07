@@ -150,6 +150,9 @@ export interface EventRegistration {
   status: 'pending' | 'approved' | 'rejected';
   paymentStatus: 'pending' | 'completed' | 'failed';
   paymentId?: string;
+  orderId?: string;
+  paymentSignature?: string;
+  registrationDate?: string;
   createdAt?: any;
   updatedAt?: any;
 }
