@@ -1,0 +1,120 @@
+The website design is complete, but some features are currently inactive or marked as “Coming Soon.” Please implement the following functionality while keeping the existing UI and aerospace theme unchanged.
+
+1. Activate Send Message Feature
+
+The Send Message / Contact form currently exists but does not store or process messages. Implement full functionality.
+
+Contact Form Fields
+
+The form should collect the following information:
+
+Full Name
+Email Address
+Phone Number
+Subject
+Message
+2. Save Messages to Database
+
+When a user submits the form:
+
+Store the message details in Firebase.
+
+Each message should be saved with a timestamp.
+
+Example data structure:
+
+messages
+   messageID
+      name
+      email
+      phone
+      subject
+      message
+      date
+      status (new / read)
+3. Admin Dashboard for Messages
+
+Add a Messages section in the admin dashboard.
+
+Admin should be able to:
+
+View all submitted messages
+
+See sender name, email, phone, subject, and message
+
+Mark messages as read
+
+Delete messages if necessary
+
+Admin panel should display messages in a clean table layout.
+
+4. Confirmation Message for Users
+
+After a user sends a message:
+
+Show a success message such as:
+
+Your message has been sent successfully. We will contact you soon.
+
+Clear the form fields after submission.
+
+5. Implement Coming Soon Pages
+
+Some pages or sections currently show “Coming Soon” but are not properly designed.
+
+Create a clean Coming Soon component/page that can be reused across the website.
+
+The Coming Soon section should include:
+
+Page title
+
+Short description
+
+Illustration or icon
+
+Message like:
+
+This section is currently under development.
+Stay tuned for updates.
+
+Optional elements:
+
+Estimated availability text
+
+Link back to Home page
+
+6. Coming Soon Page Design
+
+The Coming Soon page should match the existing aerospace theme:
+
+Dark background
+
+Smooth animations
+
+Minimal futuristic design
+
+Fully responsive layout
+
+Example elements:
+
+🚀 Section Under Development
+We are working on bringing this feature to you soon.
+7. Future Activation
+
+Ensure the Coming Soon system is easy to remove later so that when the feature is ready, the real content can replace the placeholder without breaking the page structure.
+
+8. Maintain Existing Design
+
+Do not change the existing website styling.
+
+Keep the current:
+
+Aerospace theme
+
+Dark UI style
+
+Smooth animations
+
+Responsive design
+
+Only activate the Send Message functionality and properly implement the Coming Soon pages.

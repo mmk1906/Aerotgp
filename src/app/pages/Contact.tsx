@@ -5,23 +5,52 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { MapPin, Phone, Mail, Clock, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import { useState } from 'react';
+import { createContactMessage } from '../services/databaseService';
+import { toast } from 'sonner';
 
 export function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     subject: '',
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 3000);
+    
+    try {
+      setSubmitting(true);
+
+      // Save message to Firebase
+      await createContactMessage({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        date: new Date().toISOString(),
+        status: 'new',
+      });
+
+      // Show success message
+      setSubmitted(true);
+      toast.success('Your message has been sent successfully. We will contact you soon.');
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+      }, 3000);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -159,7 +188,7 @@ export function Contact() {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm mb-2">Name</label>
+                        <label className="block text-sm mb-2">Name *</label>
                         <Input
                           value={formData.name}
                           onChange={(e) =>
@@ -171,7 +200,7 @@ export function Contact() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm mb-2">Email</label>
+                        <label className="block text-sm mb-2">Email *</label>
                         <Input
                           type="email"
                           value={formData.email}
@@ -184,20 +213,35 @@ export function Contact() {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-sm mb-2">Subject</label>
-                      <Input
-                        value={formData.subject}
-                        onChange={(e) =>
-                          setFormData({ ...formData, subject: e.target.value })
-                        }
-                        placeholder="What is this about?"
-                        required
-                        className="bg-slate-800 border-slate-700"
-                      />
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm mb-2">Phone *</label>
+                        <Input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) =>
+                            setFormData({ ...formData, phone: e.target.value })
+                          }
+                          placeholder="+91 1234567890"
+                          required
+                          className="bg-slate-800 border-slate-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-2">Subject *</label>
+                        <Input
+                          value={formData.subject}
+                          onChange={(e) =>
+                            setFormData({ ...formData, subject: e.target.value })
+                          }
+                          placeholder="What is this about?"
+                          required
+                          className="bg-slate-800 border-slate-700"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm mb-2">Message</label>
+                      <label className="block text-sm mb-2">Message *</label>
                       <Textarea
                         value={formData.message}
                         onChange={(e) =>
@@ -209,8 +253,13 @@ export function Contact() {
                         className="bg-slate-800 border-slate-700"
                       />
                     </div>
-                    <Button type="submit" size="lg" className="w-full md:w-auto">
-                      Send Message
+                    <Button 
+                      type="submit" 
+                      size="lg" 
+                      className="w-full md:w-auto"
+                      disabled={submitting}
+                    >
+                      {submitting ? 'Sending...' : 'Send Message'}
                     </Button>
                   </form>
                 )}

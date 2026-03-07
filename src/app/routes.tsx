@@ -9,6 +9,7 @@ import { ClubDetail } from './pages/ClubDetail';
 import { Academics } from './pages/Academics';
 import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
+import { Gallery } from './pages/Gallery';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDashboardProtected } from './pages/AdminDashboardProtected';
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: 'academics', Component: Academics },
       { path: 'contact', Component: Contact },
       { path: 'events', Component: Events },
+      { path: 'gallery', Component: Gallery },
       { path: 'blogs', Component: Blogs },
       { path: 'blogs/create', Component: BlogCreate },
       { path: 'blogs/edit/:id', Component: BlogCreate },

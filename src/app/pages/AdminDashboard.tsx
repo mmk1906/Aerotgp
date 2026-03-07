@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
-import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, CheckCircle, XCircle, Rocket, Eye, BookOpen, Clock, Image as ImageIcon, UserIcon as UserCheck, FileText, Settings as SettingsIcon } from 'lucide-react';
+import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, CheckCircle, XCircle, Rocket, Eye, BookOpen, Clock, Image as ImageIcon, UserIcon as UserCheck, FileText, Settings as SettingsIcon, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
@@ -24,6 +24,7 @@ import { AdminSettings } from '../components/AdminSettings';
 import { DataExportTab } from '../components/DataExportTab';
 import { CloudinaryImageUploader } from '../components/CloudinaryImageUploader';
 import { EventCreateDialog } from '../components/EventCreateDialog';
+import { MessagesManagement } from '../components/MessagesManagement';
 import { 
   getAllEvents, 
   createEvent,
@@ -52,13 +53,23 @@ interface AeroClubApplication {
   submittedAt: string;
 }
 
+interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: string;
+}
+
 export function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [registrations, setRegistrations] = useState<EventRegistration[]>([]);
   const [applications, setApplications] = useState<AeroClubApplication[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<AeroClubApplication | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateQuizDialogOpen, setIsCreateQuizDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -98,6 +109,9 @@ export function AdminDashboard() {
 
     // Fetch registrations from database
     getCollection<EventRegistration>('registrations').then(setRegistrations);
+
+    // Fetch messages from database
+    getCollection<ContactMessage>('messages').then(setMessages);
   }, []);
 
   // Safety check - ProtectedRoute wrapper should prevent this
@@ -306,6 +320,7 @@ export function AdminDashboard() {
               <TabsTrigger value="photoGallery">Gallery</TabsTrigger>
               <TabsTrigger value="faculty">Faculty</TabsTrigger>
               <TabsTrigger value="websiteContent">Content</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="export">Export Data</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
@@ -377,12 +392,12 @@ export function AdminDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Student</TableHead>
+                      <TableHead>College</TableHead>
                       <TableHead>Event</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Payment</TableHead>
-                      <TableHead>Payment ID</TableHead>
-                      <TableHead>Amount</TableHead>
+                      <TableHead>Transaction ID</TableHead>
+                      <TableHead>Receipt</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -393,11 +408,15 @@ export function AdminDashboard() {
                         <TableRow key={reg.id}>
                           <TableCell>
                             <div>
-                              <div className="font-semibold">{reg.userName}</div>
-                              <div className="text-sm text-gray-400">{reg.userEmail}</div>
-                              {reg.userPhone && (
-                                <div className="text-xs text-gray-500">{reg.userPhone}</div>
-                              )}
+                              <div className="font-semibold">{reg.fullName || reg.userName}</div>
+                              <div className="text-sm text-gray-400">{reg.email || reg.userEmail}</div>
+                              <div className="text-xs text-gray-500">{reg.phone || reg.userPhone}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div>{reg.collegeName}</div>
+                              <div className="text-gray-400">{reg.city}</div>
                             </div>
                           </TableCell>
                           <TableCell>{event?.title || 'N/A'}</TableCell>
@@ -420,32 +439,26 @@ export function AdminDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={
-                                reg.paymentStatus === 'completed'
-                                  ? 'default'
-                                  : reg.paymentStatus === 'failed'
-                                  ? 'destructive'
-                                  : 'secondary'
-                              }
-                            >
-                              {reg.paymentStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {reg.paymentId ? (
+                            {reg.transactionId ? (
                               <div className="text-xs font-mono text-gray-400">
-                                {reg.paymentId.substring(0, 12)}...
+                                {reg.transactionId}
                               </div>
                             ) : (
                               <span className="text-gray-500">-</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            {event?.isPaid ? (
-                              <span className="font-semibold text-green-400">₹{event.price}</span>
+                            {reg.paymentReceiptUrl ? (
+                              <a
+                                href={reg.paymentReceiptUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:text-blue-300 text-xs underline"
+                              >
+                                View Receipt
+                              </a>
                             ) : (
-                              <span className="text-gray-500">Free</span>
+                              <span className="text-gray-500">-</span>
                             )}
                           </TableCell>
                           <TableCell>
@@ -748,6 +761,10 @@ export function AdminDashboard() {
             <WebsiteContentManagement />
           </TabsContent>
 
+          <TabsContent value="messages">
+            <MessagesManagement />
+          </TabsContent>
+
           <TabsContent value="export">
             <DataExportTab />
           </TabsContent>
@@ -896,6 +913,52 @@ export function AdminDashboard() {
                   </Button>
                 </div>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Message Dialog */}
+      <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Message Details</DialogTitle>
+            <DialogDescription>
+              Review the message
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="space-y-6">
+              {/* Personal Info */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-400">Personal Information</h3>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Name:</span>
+                    <p className="font-semibold">{selectedMessage.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Email:</span>
+                    <p className="font-semibold">{selectedMessage.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-400">Message</h3>
+                <p className="text-sm bg-slate-800/50 p-3 rounded-lg whitespace-pre-wrap">
+                  {selectedMessage.message}
+                </p>
+              </div>
+
+              {/* Date */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-400">Date</h3>
+                <p className="text-sm bg-slate-800/50 p-3 rounded-lg">
+                  {new Date(selectedMessage.createdAt).toLocaleString()}
+                </p>
+              </div>
             </div>
           )}
         </DialogContent>

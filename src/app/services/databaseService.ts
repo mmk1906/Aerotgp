@@ -217,28 +217,62 @@ export const getUserBlogs = (userId: string) =>
   getCollection<Blog>('blogs', [where('authorId', '==', userId)]);
 
 // Gallery operations
-export interface GalleryPhoto {
+export interface GalleryItem {
   id?: string;
   imageUrl: string;
   caption: string;
-  category: string;
   uploadedBy: string;
-  uploaderName: string;
+  uploaderEmail: string;
+  uploadDate: string;
+  category: string;
   status: 'pending' | 'approved' | 'rejected';
-  likes?: number;
+  userId?: string;
   createdAt?: any;
   updatedAt?: any;
 }
 
-export const createGalleryPhoto = (data: GalleryPhoto) => createDocument('gallery', data);
-export const getGalleryPhoto = (photoId: string) => getDocument<GalleryPhoto>('gallery', photoId);
-export const updateGalleryPhoto = (photoId: string, data: Partial<GalleryPhoto>) => 
+// Gallery categories
+export const GALLERY_CATEGORIES = [
+  'Events',
+  'Workshops',
+  'Projects',
+  'Industrial Visits',
+  'Aero Club',
+  'Campus Activities',
+  'Other'
+];
+
+export const createGalleryPhoto = (data: GalleryItem) => createDocument('gallery', data);
+export const getGalleryPhoto = (photoId: string) => getDocument<GalleryItem>('gallery', photoId);
+export const updateGalleryPhoto = (photoId: string, data: Partial<GalleryItem>) => 
   updateDocument('gallery', photoId, data);
 export const deleteGalleryPhoto = (photoId: string) => deleteDocument('gallery', photoId);
 export const getApprovedGalleryPhotos = () => 
-  getCollection<GalleryPhoto>('gallery', [where('status', '==', 'approved')]);
+  getCollection<GalleryItem>('gallery', [where('status', '==', 'approved')]);
 export const getPendingGalleryPhotos = () => 
-  getCollection<GalleryPhoto>('gallery', [where('status', '==', 'pending')]);
+  getCollection<GalleryItem>('gallery', [where('status', '==', 'pending')]);
+
+// Contact Messages operations
+export interface ContactMessage {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: 'new' | 'read';
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export const createContactMessage = (data: ContactMessage) => createDocument('contactMessages', data);
+export const getContactMessage = (messageId: string) => getDocument<ContactMessage>('contactMessages', messageId);
+export const updateContactMessage = (messageId: string, data: Partial<ContactMessage>) => 
+  updateDocument('contactMessages', messageId, data);
+export const getAllContactMessages = () => getCollection<ContactMessage>('contactMessages');
+export const getNewContactMessages = () => 
+  getCollection<ContactMessage>('contactMessages', [where('status', '==', 'new')]);
 
 // Club operations
 export interface Club {

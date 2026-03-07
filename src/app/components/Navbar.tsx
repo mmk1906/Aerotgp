@@ -21,12 +21,12 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
     { name: 'Faculty', path: '/faculty' },
     { name: 'Clubs', path: '/clubs' },
     { name: 'Academics', path: '/academics' },
     { name: 'Events', path: '/events' },
+    { name: 'Gallery', path: '/gallery' },
     { name: 'Blogs', path: '/blogs' },
     { name: 'Contact', path: '/contact' },
   ];
