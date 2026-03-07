@@ -118,6 +118,7 @@ export interface Event {
   title: string;
   description: string;
   date: string;
+  time?: string;
   venue: string;
   price: number;
   isPaid: boolean;
@@ -125,6 +126,10 @@ export interface Event {
   registrationDeadline: string;
   imageUrl?: string;
   image?: string; // Legacy support
+  bannerImage?: string; // Main event banner
+  paymentQRImage?: string; // QR code for payment
+  coordinatorName?: string;
+  coordinatorContact?: string;
   registeredCount?: number;
   category?: string;
   status?: 'upcoming' | 'ongoing' | 'completed';
@@ -142,17 +147,31 @@ export const getAllEvents = () => getCollection<Event>('events');
 // Event Registration operations
 export interface EventRegistration {
   id?: string;
-  userId: string;
+  userId?: string;
   eventId: string;
-  userName: string;
-  userEmail: string;
-  userPhone?: string;
+  // Personal Information
+  fullName: string;
+  email: string;
+  phone: string;
+  department: string;
+  year: string;
+  collegeName: string;
+  city: string;
+  isInternalStudent: boolean;
+  // Team Information (optional)
+  teamName?: string;
+  numberOfParticipants?: number;
+  // Payment Information (for paid events)
+  transactionId?: string;
+  paymentReceiptUrl?: string;
+  // Registration Status
   status: 'pending' | 'approved' | 'rejected';
-  paymentStatus: 'pending' | 'completed' | 'failed';
-  paymentId?: string;
-  orderId?: string;
-  paymentSignature?: string;
+  paymentStatus?: 'pending' | 'verified' | 'rejected';
   registrationDate?: string;
+  // Legacy fields (keep for backward compatibility)
+  userName?: string;
+  userEmail?: string;
+  userPhone?: string;
   createdAt?: any;
   updatedAt?: any;
 }

@@ -22,6 +22,8 @@ import { FacultyManagement } from '../components/FacultyManagement';
 import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
 import { AdminSettings } from '../components/AdminSettings';
 import { DataExportTab } from '../components/DataExportTab';
+import { CloudinaryImageUploader } from '../components/CloudinaryImageUploader';
+import { EventCreateDialog } from '../components/EventCreateDialog';
 import { 
   getAllEvents, 
   createEvent,
@@ -66,11 +68,16 @@ export function AdminDashboard() {
     title: '',
     description: '',
     date: '',
+    time: '',
     venue: '',
     isPaid: false,
     price: 0,
     maxParticipants: 50,
     registrationDeadline: '',
+    bannerImage: '',
+    paymentQRImage: '',
+    coordinatorName: '',
+    coordinatorContact: '',
   });
 
   useEffect(() => {
@@ -135,11 +142,16 @@ export function AdminDashboard() {
         title: '',
         description: '',
         date: '',
+        time: '',
         venue: '',
         isPaid: false,
         price: 0,
         maxParticipants: 50,
         registrationDeadline: '',
+        bannerImage: '',
+        paymentQRImage: '',
+        coordinatorName: '',
+        coordinatorContact: '',
       });
       toast.success('Event created successfully!');
     });
@@ -747,120 +759,14 @@ export function AdminDashboard() {
       </div>
 
       {/* Create Event Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Event</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm mb-2">Event Title</label>
-              <Input
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                placeholder="Workshop on..."
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-2">Description</label>
-              <Textarea
-                value={newEvent.description}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                placeholder="Event description..."
-                rows={3}
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm mb-2">Event Date</label>
-                <Input
-                  type="date"
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                  className="bg-slate-800 border-slate-700"
-                />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Registration Deadline</label>
-                <Input
-                  type="date"
-                  value={newEvent.registrationDeadline}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, registrationDeadline: e.target.value })
-                  }
-                  className="bg-slate-800 border-slate-700"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm mb-2">Venue</label>
-              <Input
-                value={newEvent.venue}
-                onChange={(e) => setNewEvent({ ...newEvent, venue: e.target.value })}
-                placeholder="Lab A-101"
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm mb-2">Event Type</label>
-                <Select
-                  value={newEvent.isPaid ? 'paid' : 'free'}
-                  onValueChange={(value) =>
-                    setNewEvent({ ...newEvent, isPaid: value === 'paid' })
-                  }
-                >
-                  <SelectTrigger className="bg-slate-800 border-slate-700">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {newEvent.isPaid && (
-                <div>
-                  <label className="block text-sm mb-2">Price (₹)</label>
-                  <Input
-                    type="number"
-                    value={newEvent.price}
-                    onChange={(e) =>
-                      setNewEvent({ ...newEvent, price: Number(e.target.value) })
-                    }
-                    className="bg-slate-800 border-slate-700"
-                  />
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm mb-2">Max Participants</label>
-              <Input
-                type="number"
-                value={newEvent.maxParticipants}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, maxParticipants: Number(e.target.value) })
-                }
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-            <div className="flex space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCreateEvent} className="flex-1">
-                Create Event
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EventCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onEventCreated={(event) => {
+          setEvents([...events, event]);
+          getAllEvents().then(setEvents); // Refresh from database
+        }}
+      />
 
       {/* View Application Dialog */}
       <Dialog open={!!selectedApplication} onOpenChange={() => setSelectedApplication(null)}>
