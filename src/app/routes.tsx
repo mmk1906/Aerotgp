@@ -15,7 +15,6 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDashboardProtected } from './pages/AdminDashboardProtected';
 import { JoinAeroClub } from './pages/JoinAeroClub';
 import { Blogs } from './pages/Blogs';
-import { BlogCreate } from './pages/BlogCreate';
 import { BlogView } from './pages/BlogView';
 import { PortalLayout } from './components/PortalLayout';
 import { ProtectedPortalLayout } from './components/ProtectedPortalLayout';
@@ -42,8 +41,6 @@ export const router = createBrowserRouter([
       { path: 'events', Component: Events },
       { path: 'gallery', Component: Gallery },
       { path: 'blogs', Component: Blogs },
-      { path: 'blogs/create', Component: BlogCreate },
-      { path: 'blogs/edit/:id', Component: BlogCreate },
       { path: 'blogs/:id', Component: BlogView },
       { path: 'login', Component: Login },
       { path: 'admin', Component: AdminDashboardProtected },

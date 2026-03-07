@@ -413,6 +413,34 @@ export interface MCQTestResult {
 export const createMCQTest = (data: MCQTest) => createDocument('tests', data);
 export const getMCQTest = (testId: string) => getDocument<MCQTest>('tests', testId);
 export const getAllMCQTests = () => getCollection<MCQTest>('tests');
+export const updateMCQTest = (testId: string, data: Partial<MCQTest>) => 
+  updateDocument('tests', testId, data);
+export const deleteMCQTest = (testId: string) => deleteDocument('tests', testId);
 export const createMCQTestResult = (data: MCQTestResult) => createDocument('testResults', data);
 export const getUserTestResults = (userId: string) => 
   getCollection<MCQTestResult>('testResults', [where('userId', '==', userId)]);
+
+// Faculty operations
+export interface Faculty {
+  id?: string;
+  name: string;
+  designation: string;
+  qualification: string;
+  specialization: string;
+  email: string;
+  phone?: string;
+  photo: string;
+  department?: string;
+  experience?: string;
+  researchInterests?: string[];
+  publications?: string[];
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export const createFaculty = (data: Faculty) => createDocument('faculty', data);
+export const getFaculty = (facultyId: string) => getDocument<Faculty>('faculty', facultyId);
+export const getAllFaculty = () => getCollection<Faculty>('faculty');
+export const updateFaculty = (facultyId: string, data: Partial<Faculty>) => 
+  updateDocument('faculty', facultyId, data);
+export const deleteFaculty = (facultyId: string) => deleteDocument('faculty', facultyId);
