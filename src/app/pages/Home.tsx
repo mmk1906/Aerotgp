@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { ArrowRight, Users, Award, Rocket, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { mockEvents } from '../data/mockData';
+import { getAllEvents, getAllBlogs, getAllClubs, Event, Blog, Club } from '../services/databaseService';
 
 export function Home() {
   const [stats, setStats] = useState({
@@ -13,8 +13,53 @@ export function Home() {
     projects: 0,
     events: 0,
   });
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [latestBlogs, setLatestBlogs] = useState<Blog[]>([]);
+  const [clubs, setClubs] = useState<Club[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    loadData();
+    animateStats();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [events, blogs, clubsData] = await Promise.all([
+        getAllEvents(),
+        getAllBlogs(),
+        getAllClubs()
+      ]);
+
+      // Filter upcoming events
+      const upcoming = events
+        .filter(e => e.status === 'upcoming')
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3);
+      setUpcomingEvents(upcoming);
+
+      // Get latest blogs
+      const latest = blogs
+        .filter(b => b.status === 'published')
+        .sort((a, b) => {
+          const dateA = b.publishedAt?.seconds || b.createdAt?.seconds || 0;
+          const dateB = a.publishedAt?.seconds || a.createdAt?.seconds || 0;
+          return dateB - dateA;
+        })
+        .slice(0, 3);
+      setLatestBlogs(latest);
+
+      // Get active clubs
+      setClubs(clubsData.filter(c => c.status === 'active'));
+    } catch (error) {
+      console.error('Error loading home page data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const animateStats = () => {
     const targetStats = {
       students: 500,
       faculty: 25,
@@ -46,9 +91,7 @@ export function Home() {
     }, interval);
 
     return () => clearInterval(timer);
-  }, []);
-
-  const upcomingEvents = mockEvents.filter(e => e.status === 'upcoming').slice(0, 3);
+  };
 
   return (
     <div className="min-h-screen">

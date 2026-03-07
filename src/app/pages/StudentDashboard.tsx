@@ -15,52 +15,93 @@ import {
   Bell,
   Rocket
 } from 'lucide-react';
-import { mockEvents } from '../data/mockData';
+import { 
+  getCollection, 
+  getAllEvents,
+  getAllBlogs,
+  EventRegistration,
+  Event,
+  Blog
+} from '../services/databaseService';
 
 export function StudentDashboard() {
   const { user } = useAuth();
-  const [myRegistrations, setMyRegistrations] = useState<any[]>([]);
-  const [myBlogs, setMyBlogs] = useState<any[]>([]);
+  const [myRegistrations, setMyRegistrations] = useState<EventRegistration[]>([]);
+  const [myBlogs, setMyBlogs] = useState<Blog[]>([]);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load user data from localStorage
-    const registrations = JSON.parse(localStorage.getItem('userRegistrations') || '[]');
-    const blogs = JSON.parse(localStorage.getItem('userBlogs') || '[]');
-    const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
-    
-    setMyRegistrations(registrations.filter((r: any) => r.userId === user?.id));
-    setMyBlogs(blogs.filter((b: any) => b.authorId === user?.id));
-    setTestAttempts(attempts.filter((a: any) => a.userId === user?.id));
-
-    // Generate notifications
-    const newNotifications = [
-      {
-        id: '1',
-        type: 'event',
-        message: 'New workshop on Aerodynamics announced',
-        time: '2 hours ago',
-      },
-      {
-        id: '2',
-        type: 'blog',
-        message: 'Your blog "Future of Aviation" was approved',
-        time: '5 hours ago',
-      },
-      {
-        id: '3',
-        type: 'test',
-        message: 'New MCQ test available on Flight Mechanics',
-        time: '1 day ago',
-      },
-    ];
-    setNotifications(newNotifications);
+    if (user) {
+      loadData();
+    }
   }, [user]);
 
-  const upcomingEvents = mockEvents
-    .filter((event) => new Date(event.date) > new Date())
-    .slice(0, 3);
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load registrations from Firebase
+      const allRegistrations = await getCollection<EventRegistration>('registrations');
+      const userRegistrations = allRegistrations.filter(r => r.userId === user?.id);
+      setMyRegistrations(userRegistrations);
+
+      // Load blogs from Firebase
+      const allBlogs = await getAllBlogs();
+      const userBlogs = allBlogs.filter(b => b.authorId === user?.id);
+      setMyBlogs(userBlogs);
+
+      // Load test attempts from localStorage (not yet in Firebase)
+      const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
+      setTestAttempts(attempts.filter((a: any) => a.studentEmail === user?.email));
+
+      // Load upcoming events
+      const events = await getAllEvents();
+      const upcoming = events
+        .filter((event) => new Date(event.date) > new Date() && event.status === 'upcoming')
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3);
+      setUpcomingEvents(upcoming);
+
+      // Generate notifications based on real data
+      const newNotifications = [];
+      
+      if (userRegistrations.some(r => r.status === 'approved')) {
+        newNotifications.push({
+          id: 'reg-approved',
+          type: 'event',
+          message: 'Your event registration was approved',
+          time: 'Recently',
+        });
+      }
+      
+      if (userBlogs.some(b => b.status === 'published')) {
+        newNotifications.push({
+          id: 'blog-published',
+          type: 'blog',
+          message: 'Your blog was published',
+          time: 'Recently',
+        });
+      }
+
+      if (upcoming.length > 0) {
+        newNotifications.push({
+          id: 'upcoming-event',
+          type: 'event',
+          message: `Upcoming: ${upcoming[0].title}`,
+          time: new Date(upcoming[0].date).toLocaleDateString(),
+        });
+      }
+
+      setNotifications(newNotifications);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const stats = [
     {

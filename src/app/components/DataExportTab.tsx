@@ -6,68 +6,87 @@ import { toast } from 'sonner';
 import { 
   getCollection,
   getAllEvents,
-  getPublishedBlogs,
-  getActiveClubMembers,
+  getAllBlogs,
+  getClubApplications,
+  EventRegistration,
+  Event,
+  Blog,
+  ClubApplication,
 } from '../services/databaseService';
-import { exportData } from '../services/exportService';
+import {
+  exportEventRegistrationsToExcel,
+  exportClubApplicationsToExcel,
+  exportBlogsToExcel,
+  exportEventsToExcel,
+  exportAllDataToExcel,
+} from '../services/excelExportService';
 
 export function DataExportTab() {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleExport = async (
-    dataType: 'users' | 'events' | 'clubs' | 'blogs' | 'tests' | 'gallery' | 'registrations',
-    format: 'excel' | 'csv'
+    dataType: 'users' | 'events' | 'clubs' | 'blogs' | 'registrations' | 'all'
   ) => {
-    setLoading(`${dataType}-${format}`);
+    setLoading(dataType);
     
     try {
-      let data: any[] = [];
-      let fileName = '';
-      
       switch (dataType) {
-        case 'users':
-          data = await getCollection('users');
-          fileName = `Users_${new Date().toISOString().split('T')[0]}`;
-          break;
-          
         case 'events':
-          data = await getAllEvents();
-          fileName = `Events_${new Date().toISOString().split('T')[0]}`;
+          const events = await getAllEvents();
+          if (events.length === 0) {
+            toast.warning('No events to export');
+            return;
+          }
+          exportEventsToExcel(events);
+          toast.success(`Exported ${events.length} events to Excel`);
           break;
           
         case 'registrations':
-          data = await getCollection('registrations');
-          fileName = `Event_Registrations_${new Date().toISOString().split('T')[0]}`;
+          const registrations = await getCollection<EventRegistration>('registrations');
+          if (registrations.length === 0) {
+            toast.warning('No registrations to export');
+            return;
+          }
+          exportEventRegistrationsToExcel(registrations);
+          toast.success(`Exported ${registrations.length} registrations to Excel`);
           break;
           
         case 'clubs':
-          data = await getActiveClubMembers();
-          fileName = `Club_Members_${new Date().toISOString().split('T')[0]}`;
+          const clubApplications = await getClubApplications();
+          if (clubApplications.length === 0) {
+            toast.warning('No club applications to export');
+            return;
+          }
+          exportClubApplicationsToExcel(clubApplications);
+          toast.success(`Exported ${clubApplications.length} club applications to Excel`);
           break;
           
         case 'blogs':
-          data = await getPublishedBlogs();
-          fileName = `Blogs_${new Date().toISOString().split('T')[0]}`;
+          const blogs = await getAllBlogs();
+          if (blogs.length === 0) {
+            toast.warning('No blogs to export');
+            return;
+          }
+          exportBlogsToExcel(blogs);
+          toast.success(`Exported ${blogs.length} blogs to Excel`);
           break;
-          
-        case 'tests':
-          data = await getCollection('testResults');
-          fileName = `Test_Results_${new Date().toISOString().split('T')[0]}`;
-          break;
-          
-        case 'gallery':
-          data = await getCollection('gallery');
-          fileName = `Gallery_Photos_${new Date().toISOString().split('T')[0]}`;
+
+        case 'all':
+          const [allEvents, allRegs, allClubs, allBlogs] = await Promise.all([
+            getAllEvents(),
+            getCollection<EventRegistration>('registrations'),
+            getClubApplications(),
+            getAllBlogs()
+          ]);
+          exportAllDataToExcel({
+            events: allEvents,
+            registrations: allRegs,
+            clubs: allClubs,
+            blogs: allBlogs,
+          });
+          toast.success('Exported all data to Excel');
           break;
       }
-      
-      if (data.length === 0) {
-        toast.warning('No data available to export');
-        return;
-      }
-      
-      exportData(data, fileName, format, dataType);
-      toast.success(`Successfully exported ${data.length} records to ${format.toUpperCase()}`);
       
     } catch (error: any) {
       console.error('Export error:', error);
@@ -109,16 +128,10 @@ export function DataExportTab() {
       icon: '📝',
     },
     {
-      id: 'tests',
-      title: 'Test Results',
-      description: 'Export MCQ test results and scores',
+      id: 'all',
+      title: 'All Data',
+      description: 'Export all data in a single Excel file',
       icon: '📊',
-    },
-    {
-      id: 'gallery',
-      title: 'Gallery Photos',
-      description: 'Export gallery photo metadata',
-      icon: '📸',
     },
   ];
 
@@ -153,30 +166,16 @@ export function DataExportTab() {
               <CardContent>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => handleExport(item.id as any, 'excel')}
+                    onClick={() => handleExport(item.id as any)}
                     disabled={isLoading}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
-                    {loading === `${item.id}-excel` ? (
+                    {loading === `${item.id}` ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
                       <FileSpreadsheet className="w-4 h-4 mr-2" />
                     )}
                     Excel
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handleExport(item.id as any, 'csv')}
-                    disabled={isLoading}
-                    variant="outline"
-                    className="flex-1 border-slate-600 text-white hover:bg-slate-700"
-                  >
-                    {loading === `${item.id}-csv` ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <FileText className="w-4 h-4 mr-2" />
-                    )}
-                    CSV
                   </Button>
                 </div>
               </CardContent>
