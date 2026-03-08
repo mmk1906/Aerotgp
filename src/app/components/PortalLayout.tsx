@@ -31,7 +31,6 @@ export function PortalLayout() {
     { name: 'My Events', path: '/portal/my-events', icon: Calendar },
     { name: 'My Clubs', path: '/portal/my-clubs', icon: Users },
     { name: 'MCQ Tests', path: '/portal/tests', icon: GraduationCap },
-    { name: 'Aero Club', path: '/portal/aero-club', icon: Plane },
   ];
 
   const handleLogout = () => {

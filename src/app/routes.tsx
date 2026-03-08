@@ -20,7 +20,7 @@ import { ProfileManagement } from './pages/ProfileManagement';
 import { MyEvents } from './pages/MyEvents';
 import { PortalTests } from './pages/PortalTests';
 import { PortalAeroClub } from './pages/PortalAeroClub';
-import { PortalMyClubs } from './pages/PortalMyClubs';
+import { PortalMyClubs } from './pages/PortalMyClubsNew';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Updated: 2026-03-08 - Contact and Join forms with Firebase integration
@@ -52,7 +52,6 @@ export const router = createBrowserRouter([
       { path: 'my-events', Component: MyEvents },
       { path: 'my-clubs', Component: PortalMyClubs },
       { path: 'tests', Component: PortalTests },
-      { path: 'aero-club', Component: PortalAeroClub },
     ],
   },
 ]);

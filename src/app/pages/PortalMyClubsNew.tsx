@@ -6,7 +6,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import {
   Users,
   Trophy,
@@ -17,7 +18,8 @@ import {
   Trash2,
   Calendar,
   Award,
-  Loader2
+  Loader2,
+  UserPlus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
@@ -26,8 +28,13 @@ import {
   getMemberProgressByUser,
   createMemberProgress,
   updateMemberProgress,
+  getAllClubs,
+  createClubApplication,
+  getClubApplications,
   ClubMember,
-  MemberProgress
+  MemberProgress,
+  Club,
+  ClubApplication
 } from '../services/databaseService';
 
 export function PortalMyClubs() {
@@ -40,6 +47,13 @@ export function PortalMyClubs() {
   const [newAchievement, setNewAchievement] = useState('');
   const [newEvent, setNewEvent] = useState('');
   const [newSkill, setNewSkill] = useState('');
+
+  // Join Club states
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [availableClubs, setAvailableClubs] = useState<Club[]>([]);
+  const [selectedClubId, setSelectedClubId] = useState('');
+  const [joinReason, setJoinReason] = useState('');
+  const [submittingJoin, setSubmittingJoin] = useState(false);
 
   const [progressForm, setProgressForm] = useState({
     projectsCompleted: 0,
@@ -61,6 +75,17 @@ export function PortalMyClubs() {
       const membershipsData = await getUserClubMemberships(user!.uid);
       setMemberships(membershipsData.filter(m => m.status === 'active'));
 
+      // Load all clubs for join dialog
+      const allClubs = await getAllClubs();
+      // Filter out clubs user is already a member of and Aerocious
+      const userClubIds = membershipsData.map(m => m.clubId);
+      const available = allClubs.filter(club => 
+        !userClubIds.includes(club.id!) && 
+        club.slug.toLowerCase() !== 'aerocious' && // Aerocious is admin-only
+        club.status === 'active'
+      );
+      setAvailableClubs(available);
+
       // Load progress for each club
       const progressMap: Record<string, MemberProgress> = {};
       for (const membership of membershipsData) {
@@ -76,6 +101,73 @@ export function PortalMyClubs() {
       toast.error('Failed to load your club memberships');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenJoinDialog = () => {
+    setShowJoinDialog(true);
+    setSelectedClubId('');
+    setJoinReason('');
+  };
+
+  const handleSubmitJoinRequest = async () => {
+    if (!selectedClubId) {
+      toast.error('Please select a club');
+      return;
+    }
+
+    if (!joinReason.trim()) {
+      toast.error('Please provide a reason for joining');
+      return;
+    }
+
+    try {
+      setSubmittingJoin(true);
+
+      const selectedClubData = availableClubs.find(c => c.id === selectedClubId);
+      if (!selectedClubData) {
+        toast.error('Selected club not found');
+        return;
+      }
+
+      // Check if user already has a pending application for this club
+      const existingApplications = await getClubApplications();
+      const hasPendingApplication = existingApplications.some(
+        app => app.userId === user!.uid && 
+               app.clubId === selectedClubId && 
+               app.status === 'pending'
+      );
+
+      if (hasPendingApplication) {
+        toast.error('You already have a pending application for this club');
+        return;
+      }
+
+      // Create application
+      await createClubApplication({
+        clubId: selectedClubId,
+        clubName: selectedClubData.name,
+        userId: user!.uid,
+        fullName: user!.displayName || user!.email!,
+        email: user!.email!,
+        phone: '', // Optional
+        department: '', // Will be filled from user profile if available
+        year: '', // Will be filled from user profile if available
+        reason: joinReason,
+        status: 'pending',
+        submittedAt: new Date().toISOString(),
+      } as ClubApplication);
+
+      toast.success('Application submitted successfully! Wait for admin approval.');
+      setShowJoinDialog(false);
+      setSelectedClubId('');
+      setJoinReason('');
+      await loadData();
+    } catch (error) {
+      console.error('Error submitting join request:', error);
+      toast.error('Failed to submit application');
+    } finally {
+      setSubmittingJoin(false);
     }
   };
 
@@ -120,12 +212,10 @@ export function PortalMyClubs() {
       };
 
       if (progress) {
-        // Update existing progress
         await updateMemberProgress(progress.id!, progressData);
         toast.success('Progress updated successfully');
       } else {
-        // Create new progress record
-        const newProgressId = await createMemberProgress(progressData as MemberProgress);
+        await createMemberProgress(progressData as MemberProgress);
         toast.success('Progress created successfully');
       }
 
@@ -150,7 +240,6 @@ export function PortalMyClubs() {
       if (progress) {
         await updateMemberProgress(progress.id!, { achievements });
       } else {
-        // Create new progress with achievement
         await createMemberProgress({
           clubId: selectedClub.clubId,
           memberId: selectedClub.id!,
@@ -280,119 +369,194 @@ export function PortalMyClubs() {
     );
   }
 
-  if (memberships.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <Users className="w-24 h-24 text-gray-600 mx-auto mb-6" />
-        <h2 className="text-2xl font-bold mb-4">No Club Memberships</h2>
-        <p className="text-gray-400 mb-8">You haven't joined any clubs yet</p>
-        <Button onClick={() => window.location.href = '/clubs'}>
-          Browse Clubs
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">My Clubs</h1>
-        <p className="text-gray-400">Manage your club memberships and track your progress</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">My Clubs</h1>
+          <p className="text-gray-400">Manage your club memberships and track your progress</p>
+        </div>
+        <Button onClick={handleOpenJoinDialog} className="bg-blue-600 hover:bg-blue-700">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Join Club
+        </Button>
       </div>
 
-      {/* Membership Cards */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {memberships.map((membership) => {
-          const progress = progressRecords[membership.clubId];
-          
-          return (
-            <motion.div
-              key={membership.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-2xl mb-2">{membership.clubName}</CardTitle>
-                      <Badge variant="outline" className="mb-2">{membership.role}</Badge>
-                      <p className="text-sm text-gray-400">
-                        Joined: {new Date(membership.joinedDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() => handleEditProgress(membership)}
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Update Progress
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {progress ? (
-                    <div className="space-y-4">
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-slate-800/50 p-4 rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Target className="w-5 h-5 text-blue-500" />
-                            <span className="text-sm text-gray-400">Projects</span>
-                          </div>
-                          <p className="text-2xl font-bold">{progress.projectsCompleted}</p>
-                        </div>
-                        <div className="bg-slate-800/50 p-4 rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <TrendingUp className="w-5 h-5 text-green-500" />
-                            <span className="text-sm text-gray-400">Tasks</span>
-                          </div>
-                          <p className="text-2xl font-bold">{progress.tasksContributed}</p>
-                        </div>
+      {memberships.length === 0 ? (
+        <div className="text-center py-20">
+          <Users className="w-24 h-24 text-gray-600 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold mb-4">No Club Memberships</h2>
+          <p className="text-gray-400 mb-8">You haven't joined any clubs yet</p>
+          <Button onClick={handleOpenJoinDialog} className="bg-blue-600 hover:bg-blue-700">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Join a Club
+          </Button>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-6">
+          {memberships.map((membership) => {
+            const progress = progressRecords[membership.clubId];
+            
+            return (
+              <motion.div
+                key={membership.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-2xl mb-2">{membership.clubName}</CardTitle>
+                        <Badge variant="outline" className="mb-2">{membership.role}</Badge>
+                        <p className="text-sm text-gray-400">
+                          Joined: {new Date(membership.joinedDate).toLocaleDateString()}
+                        </p>
                       </div>
-
-                      {/* Quick Overview */}
-                      <div className="space-y-2 text-sm">
-                        {progress.achievements.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-yellow-500" />
-                            <span className="text-gray-400">{progress.achievements.length} Achievements</span>
-                          </div>
-                        )}
-                        {progress.eventsParticipated.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-purple-500" />
-                            <span className="text-gray-400">{progress.eventsParticipated.length} Events</span>
-                          </div>
-                        )}
-                        {progress.skillsDeveloped.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Award className="w-4 h-4 text-cyan-500" />
-                            <span className="text-gray-400">{progress.skillsDeveloped.length} Skills</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <p className="mb-4">No progress tracked yet</p>
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => handleEditProgress(membership)}
                       >
-                        Start Tracking
+                        <Edit className="w-4 h-4 mr-2" />
+                        Update Progress
                       </Button>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+                  </CardHeader>
+                  <CardContent>
+                    {progress ? (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-slate-800/50 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Target className="w-5 h-5 text-blue-500" />
+                              <span className="text-sm text-gray-400">Projects</span>
+                            </div>
+                            <p className="text-2xl font-bold">{progress.projectsCompleted}</p>
+                          </div>
+                          <div className="bg-slate-800/50 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <TrendingUp className="w-5 h-5 text-green-500" />
+                              <span className="text-sm text-gray-400">Tasks</span>
+                            </div>
+                            <p className="text-2xl font-bold">{progress.tasksContributed}</p>
+                          </div>
+                        </div>
 
-      {/* Edit Progress Dialog */}
+                        <div className="space-y-2 text-sm">
+                          {progress.achievements.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Trophy className="w-4 h-4 text-yellow-500" />
+                              <span className="text-gray-400">{progress.achievements.length} Achievements</span>
+                            </div>
+                          )}
+                          {progress.eventsParticipated.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-purple-500" />
+                              <span className="text-gray-400">{progress.eventsParticipated.length} Events</span>
+                            </div>
+                          )}
+                          {progress.skillsDeveloped.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Award className="w-4 h-4 text-cyan-500" />
+                              <span className="text-gray-400">{progress.skillsDeveloped.length} Skills</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p className="mb-4">No progress tracked yet</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditProgress(membership)}
+                        >
+                          Start Tracking
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Join Club Dialog */}
+      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">Join a Club</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Select a club and provide a reason for joining. Your application will be reviewed by admin.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <div>
+              <Label>Select Club</Label>
+              <Select value={selectedClubId} onValueChange={setSelectedClubId}>
+                <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectValue placeholder="Choose a club" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  {availableClubs.length === 0 ? (
+                    <div className="p-4 text-center text-gray-400">
+                      No clubs available to join
+                    </div>
+                  ) : (
+                    availableClubs.map((club) => (
+                      <SelectItem key={club.id} value={club.id!}>
+                        {club.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Why do you want to join?</Label>
+              <Textarea
+                value={joinReason}
+                onChange={(e) => setJoinReason(e.target.value)}
+                rows={4}
+                placeholder="Tell us why you're interested in joining this club..."
+                className="bg-slate-800 border-slate-700"
+              />
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowJoinDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmitJoinRequest}
+                disabled={submittingJoin || !selectedClubId || !joinReason.trim()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {submittingJoin ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Submit Application
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Progress Dialog - Same as before, truncated for brevity */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
