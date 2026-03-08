@@ -18,16 +18,13 @@ import {
 import { 
   getCollection, 
   getAllEvents,
-  getAllBlogs,
   EventRegistration,
-  Event,
-  Blog
+  Event
 } from '../services/databaseService';
 
 export function StudentDashboard() {
   const { user } = useAuth();
   const [myRegistrations, setMyRegistrations] = useState<EventRegistration[]>([]);
-  const [myBlogs, setMyBlogs] = useState<Blog[]>([]);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
@@ -47,11 +44,6 @@ export function StudentDashboard() {
       const allRegistrations = await getCollection<EventRegistration>('registrations');
       const userRegistrations = allRegistrations.filter(r => r.userId === user?.id);
       setMyRegistrations(userRegistrations);
-
-      // Load blogs from Firebase
-      const allBlogs = await getAllBlogs();
-      const userBlogs = allBlogs.filter(b => b.authorId === user?.id);
-      setMyBlogs(userBlogs);
 
       // Load test attempts from localStorage (not yet in Firebase)
       const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
@@ -73,15 +65,6 @@ export function StudentDashboard() {
           id: 'reg-approved',
           type: 'event',
           message: 'Your event registration was approved',
-          time: 'Recently',
-        });
-      }
-      
-      if (userBlogs.some(b => b.status === 'published')) {
-        newNotifications.push({
-          id: 'blog-published',
-          type: 'blog',
-          message: 'Your blog was published',
           time: 'Recently',
         });
       }
@@ -110,13 +93,6 @@ export function StudentDashboard() {
       icon: Calendar,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
-    },
-    {
-      title: 'Blogs Published',
-      value: myBlogs.filter((b) => b.status === 'approved').length,
-      icon: FileText,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
     },
     {
       title: 'Tests Completed',
@@ -303,17 +279,6 @@ export function StudentDashboard() {
                     <p className="font-semibold">Register for Events</p>
                     <p className="text-xs text-gray-400 mt-1">
                       Explore upcoming workshops and seminars
-                    </p>
-                  </div>
-                </Button>
-              </Link>
-              <Link to="/portal/my-blogs">
-                <Button variant="outline" className="w-full h-full py-6 justify-start">
-                  <div className="text-left">
-                    <FileText className="w-6 h-6 mb-2 text-green-400" />
-                    <p className="font-semibold">Write a Blog</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Share your knowledge and experiences
                     </p>
                   </div>
                 </Button>

@@ -1,60 +1,63 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
 import { useParams, useNavigate } from 'react-router';
-import { Card, CardContent } from '../components/ui/card';
+import { motion } from 'motion/react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
-import { Input } from '../components/ui/input';
-import { Textarea } from '../components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Badge } from '../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
 import { 
-  ArrowLeft, 
   Users, 
-  Trophy, 
-  Rocket, 
+  Award, 
   Calendar, 
-  Mail,
-  Upload,
-  Plus 
+  TrendingUp, 
+  Star,
+  ArrowLeft,
+  UserPlus,
+  Loader2,
+  Trophy,
+  Target,
+  Zap
 } from 'lucide-react';
-import { 
-  getClubBySlug, 
-  getClubProjects,
-  getActiveClubMembers,
-  getAllEvents,
-  getApprovedGalleryPhotos,
-  createClubApplication,
-  Club,
-  ClubProject,
-  ClubMember,
-  Event,
-  GalleryPhoto
-} from '../services/databaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
-import { ClubMemberCard } from '../components/ClubMemberCard';
-import { ImageLightbox } from '../components/ImageLightbox';
+import {
+  getClubBySlug,
+  getClubMembers,
+  getClubProjects,
+  getClubMemberProgress,
+  createClubApplication,
+  getUserClubMemberships,
+  getAllEvents,
+  Club,
+  ClubMember,
+  ClubProject,
+  MemberProgress,
+  Event
+} from '../services/databaseService';
 
 export function ClubDetail() {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-
+  
   const [club, setClub] = useState<Club | null>(null);
-  const [projects, setProjects] = useState<ClubProject[]>([]);
   const [members, setMembers] = useState<ClubMember[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
+  const [featuredMembers, setFeaturedMembers] = useState<ClubMember[]>([]);
+  const [projects, setProjects] = useState<ClubProject[]>([]);
+  const [progress, setProgress] = useState<MemberProgress[]>([]);
+  const [clubEvents, setClubEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
+  const [isAlreadyMember, setIsAlreadyMember] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [applicationForm, setApplicationForm] = useState({
-    fullName: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
     department: '',
     year: '',
     skills: '',
@@ -70,21 +73,16 @@ export function ClubDetail() {
   }, [slug]);
 
   useEffect(() => {
-    if (user) {
-      setApplicationForm(prev => ({
-        ...prev,
-        fullName: user.name,
-        email: user.email,
-        phone: user.phone || '',
-      }));
+    if (user && club) {
+      checkMembership();
     }
-  }, [user]);
+  }, [user, club]);
 
   const loadClubData = async () => {
     try {
       setLoading(true);
       
-      // Load club data
+      // Fetch club details
       const clubData = await getClubBySlug(slug!);
       if (!clubData) {
         toast.error('Club not found');
@@ -93,69 +91,89 @@ export function ClubDetail() {
       }
       setClub(clubData);
 
-      // Load club projects
+      // Fetch members
+      const membersData = await getClubMembers(clubData.id!);
+      setMembers(membersData.filter(m => m.status === 'active'));
+      setFeaturedMembers(membersData.filter(m => m.status === 'active' && m.isFeatured));
+
+      // Fetch projects
       const projectsData = await getClubProjects(clubData.id!);
       setProjects(projectsData);
 
-      // Load club members (for now, all active members - you can filter by clubId later)
-      const membersData = await getActiveClubMembers();
-      setMembers(membersData);
+      // Fetch member progress
+      const progressData = await getClubMemberProgress(clubData.id!);
+      setProgress(progressData);
 
-      // Load club events (filter by club category if needed)
-      const eventsData = await getAllEvents();
-      setEvents(eventsData.filter(e => e.status === 'upcoming').slice(0, 3));
-
-      // Load gallery photos (filter by club category if needed)
-      const photosData = await getApprovedGalleryPhotos();
-      // Filter photos for this club - assuming category matches club name
-      setGalleryPhotos(photosData.filter(p => 
-        p.category?.toLowerCase().includes(clubData.name.toLowerCase())
-      ).slice(0, 12));
+      // Fetch related events (simplified - could filter by club tag)
+      const allEvents = await getAllEvents();
+      setClubEvents(allEvents.slice(0, 3)); // Show latest 3 events
 
     } catch (error) {
       console.error('Error loading club data:', error);
-      toast.error('Failed to load club data');
+      toast.error('Failed to load club details');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleJoinClub = async () => {
+  const checkMembership = async () => {
+    if (!user || !club) return;
+    
+    try {
+      const memberships = await getUserClubMemberships(user.uid);
+      const isMember = memberships.some(m => m.clubId === club.id && m.status === 'active');
+      setIsAlreadyMember(isMember);
+    } catch (error) {
+      console.error('Error checking membership:', error);
+    }
+  };
+
+  const handleJoinClub = () => {
     if (!user) {
       toast.error('Please login to join the club');
       navigate('/login');
       return;
     }
 
-    if (!applicationForm.fullName || !applicationForm.email || !applicationForm.department || 
-        !applicationForm.year || !applicationForm.skills || !applicationForm.motivation) {
-      toast.error('Please fill all required fields');
+    setFormData({
+      fullName: user.displayName || '',
+      email: user.email || '',
+      phone: '',
+      department: '',
+      year: '',
+      skills: '',
+      experience: '',
+      motivation: '',
+      portfolio: '',
+    });
+    setShowJoinDialog(true);
+  };
+
+  const handleSubmitApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.fullName || !formData.email || !formData.motivation) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
     try {
+      setSubmitting(true);
+
       await createClubApplication({
         clubId: club!.id!,
         clubName: club!.name,
-        userId: user.id,
-        fullName: applicationForm.fullName,
-        email: applicationForm.email,
-        phone: applicationForm.phone,
-        department: applicationForm.department,
-        year: applicationForm.year,
-        skills: applicationForm.skills,
-        experience: applicationForm.experience,
-        motivation: applicationForm.motivation,
-        portfolio: applicationForm.portfolio,
+        userId: user!.uid,
+        ...formData,
         status: 'pending',
       });
 
-      toast.success('Application submitted successfully! You will be notified once reviewed.');
-      setIsJoinDialogOpen(false);
-      setApplicationForm({
-        fullName: user.name,
-        email: user.email,
-        phone: user.phone || '',
+      toast.success('Application submitted successfully! Admin will review it soon.');
+      setShowJoinDialog(false);
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
         department: '',
         year: '',
         skills: '',
@@ -166,112 +184,168 @@ export function ClubDetail() {
     } catch (error) {
       console.error('Error submitting application:', error);
       toast.error('Failed to submit application');
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index);
-    setLightboxOpen(true);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen pt-24 pb-20 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading club details...</p>
+          <Loader2 className="w-16 h-16 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-400 text-lg">Loading club details...</p>
         </div>
       </div>
     );
   }
 
   if (!club) {
-    return null;
+    return (
+      <div className="min-h-screen pt-24 pb-20 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 text-lg">Club not found</p>
+          <Button onClick={() => navigate('/clubs')} className="mt-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Clubs
+          </Button>
+        </div>
+      </div>
+    );
   }
-
-  const lightboxImages = galleryPhotos.map(photo => ({
-    url: photo.imageUrl,
-    caption: photo.caption,
-  }));
 
   return (
     <div className="min-h-screen pt-24 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <Button
-          variant="outline"
+        <Button 
+          variant="ghost" 
           onClick={() => navigate('/clubs')}
-          className="mb-8"
+          className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Clubs
         </Button>
 
-        {/* Club Header */}
+        {/* Club Header with Banner */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="relative mb-12"
+        >
+          {club.banner && (
+            <div className="h-64 rounded-2xl overflow-hidden mb-6">
+              <img 
+                src={club.banner} 
+                alt={club.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
+            </div>
+          )}
+
+          <div className="flex items-start gap-6">
+            {club.logo && (
+              <img 
+                src={club.logo} 
+                alt={club.name}
+                className="w-24 h-24 rounded-xl shadow-lg"
+              />
+            )}
+            <div className="flex-1">
+              <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                {club.name}
+              </h1>
+              {club.shortDescription && (
+                <p className="text-xl text-gray-400 mb-4">{club.shortDescription}</p>
+              )}
+              <div className="flex flex-wrap gap-4">
+                <Badge variant="outline" className="px-4 py-2">
+                  <Users className="w-4 h-4 mr-2" />
+                  {members.length} Members
+                </Badge>
+                {club.establishedYear && (
+                  <Badge variant="outline" className="px-4 py-2">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Est. {club.establishedYear}
+                  </Badge>
+                )}
+                {club.category && (
+                  <Badge variant="outline" className="px-4 py-2">
+                    {club.category}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {!isAlreadyMember && (
+              <Button 
+                size="lg" 
+                onClick={handleJoinClub}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+              >
+                <UserPlus className="w-5 h-5 mr-2" />
+                Join Club
+              </Button>
+            )}
+            {isAlreadyMember && (
+              <Badge className="bg-green-600 px-6 py-3 text-base">
+                ✓ Member
+              </Badge>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Club Stats */}
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
+          {[
+            { icon: Users, label: 'Active Members', value: members.length, color: 'text-blue-500' },
+            { icon: Target, label: 'Active Projects', value: projects.filter(p => p.status === 'ongoing').length, color: 'text-green-500' },
+            { icon: Trophy, label: 'Achievements', value: club.achievements?.length || 0, color: 'text-yellow-500' },
+            { icon: Zap, label: 'Events', value: clubEvents.length, color: 'text-purple-500' },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400 mb-1">{stat.label}</p>
+                      <p className="text-3xl font-bold">{stat.value}</p>
+                    </div>
+                    <stat.icon className={`w-12 h-12 ${stat.color}`} />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Club Description */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="mb-12"
         >
-          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden">
-            {/* Banner */}
-            {club.banner && (
-              <div className="relative h-64 md:h-80">
-                <img
-                  src={club.banner}
-                  alt={club.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
-              </div>
-            )}
-
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                {club.logo && (
-                  <img
-                    src={club.logo}
-                    alt={`${club.name} logo`}
-                    className="w-24 h-24 rounded-lg border-2 border-slate-700"
-                  />
-                )}
-                <div className="flex-1">
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    {club.name}
-                  </h1>
-                  <p className="text-xl text-gray-400 mb-6">{club.description}</p>
-
-                  {/* Stats */}
-                  <div className="flex flex-wrap gap-6">
-                    {club.memberCount && (
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-5 h-5 text-blue-500" />
-                        <span className="text-lg font-semibold">{club.memberCount}</span>
-                        <span className="text-gray-400">Members</span>
-                      </div>
-                    )}
-                    {club.establishedYear && (
-                      <div className="flex items-center space-x-2">
-                        <Trophy className="w-5 h-5 text-blue-500" />
-                        <span className="text-lg font-semibold">Est. {club.establishedYear}</span>
-                      </div>
-                    )}
-                    {club.facultyCoordinator && (
-                      <div className="flex items-center space-x-2">
-                        <Mail className="w-5 h-5 text-blue-500" />
-                        <span className="text-gray-400">Coordinator: {club.facultyCoordinator}</span>
-                      </div>
-                    )}
-                  </div>
+          <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+            <CardHeader>
+              <CardTitle className="text-2xl">About {club.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                {club.description}
+              </p>
+              {club.facultyCoordinator && (
+                <div className="mt-6 p-4 bg-slate-800/50 rounded-lg">
+                  <p className="text-sm text-gray-400 mb-1">Faculty Coordinator</p>
+                  <p className="text-lg font-semibold text-blue-400">{club.facultyCoordinator}</p>
                 </div>
-                <Button 
-                  size="lg" 
-                  onClick={() => setIsJoinDialogOpen(true)}
-                  className="w-full md:w-auto"
-                >
-                  Join {club.name} <Rocket className="ml-2 w-5 h-5" />
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -280,21 +354,73 @@ export function ClubDetail() {
         {club.achievements && club.achievements.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-12"
           >
-            <h2 className="text-3xl font-bold mb-6">Achievements</h2>
             <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
-              <CardContent className="p-6">
-                <ul className="space-y-3">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Award className="w-6 h-6 mr-2 text-yellow-500" />
+                  Achievements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
                   {club.achievements.map((achievement, index) => (
-                    <li key={index} className="flex items-start space-x-3">
+                    <div 
+                      key={index}
+                      className="flex items-start gap-3 p-4 bg-slate-800/50 rounded-lg"
+                    >
                       <Trophy className="w-5 h-5 text-yellow-500 mt-1 flex-shrink-0" />
-                      <span className="text-gray-300">{achievement}</span>
-                    </li>
+                      <p className="text-gray-300">{achievement}</p>
+                    </div>
                   ))}
-                </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Featured Members */}
+        {featuredMembers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-12"
+          >
+            <Card className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm border-blue-700/50">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Star className="w-6 h-6 mr-2 text-yellow-500" />
+                  Featured Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {featuredMembers.map((member) => (
+                    <Card key={member.id} className="bg-slate-900/50 border-slate-700">
+                      <CardContent className="p-6 text-center">
+                        <div className="relative inline-block mb-4">
+                          <img 
+                            src={member.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.userName)}&background=3b82f6&color=fff&size=128`}
+                            alt={member.userName}
+                            className="w-24 h-24 rounded-full object-cover mx-auto"
+                          />
+                          <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-2">
+                            <Star className="w-4 h-4 text-slate-900 fill-current" />
+                          </div>
+                        </div>
+                        <h3 className="text-lg font-bold mb-1">{member.userName}</h3>
+                        <p className="text-blue-400 text-sm mb-2">{member.role}</p>
+                        {member.contribution && (
+                          <p className="text-sm text-gray-400">{member.contribution}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -304,176 +430,120 @@ export function ClubDetail() {
         {members.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mb-12"
           >
-            <h2 className="text-3xl font-bold mb-6">Active Members</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {members.slice(0, 8).map((member, index) => (
-                <ClubMemberCard key={member.id} member={member} index={index} />
-              ))}
-            </div>
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Users className="w-6 h-6 mr-2 text-blue-500" />
+                  Active Members ({members.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-4 gap-6">
+                  {members.map((member) => (
+                    <div 
+                      key={member.id}
+                      className="text-center group"
+                    >
+                      <img 
+                        src={member.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.userName)}&background=3b82f6&color=fff&size=128`}
+                        alt={member.userName}
+                        className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-2 border-slate-700 group-hover:border-blue-500 transition-colors"
+                      />
+                      <h3 className="font-semibold text-sm mb-1">{member.userName}</h3>
+                      <p className="text-xs text-blue-400">{member.role}</p>
+                      {member.department && (
+                        <p className="text-xs text-gray-500 mt-1">{member.department}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
 
-        {/* Projects */}
+        {/* Active Projects */}
         {projects.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="mb-12"
           >
-            <h2 className="text-3xl font-bold mb-6">Club Projects</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all h-full">
-                    {project.imageUrl && (
-                      <div className="relative h-48">
-                        <img
-                          src={project.imageUrl}
-                          alt={project.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-xl font-semibold">{project.title}</h3>
-                        {project.status && (
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Target className="w-6 h-6 mr-2 text-green-500" />
+                  Projects
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {projects.map((project) => (
+                    <Card key={project.id} className="bg-slate-800/50 border-slate-700">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="text-lg font-bold">{project.title}</h3>
                           <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
                             {project.status}
                           </Badge>
-                        )}
-                      </div>
-                      <p className="text-gray-400 text-sm mb-4">{project.description}</p>
-                      {project.progress !== undefined && (
-                        <div className="mb-3">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="text-gray-400">Progress</span>
-                            <span className="text-blue-400">{project.progress}%</span>
-                          </div>
-                          <div className="w-full bg-slate-800 rounded-full h-2">
-                            <div
-                              className="bg-blue-500 h-2 rounded-full transition-all"
-                              style={{ width: `${project.progress}%` }}
-                            ></div>
-                          </div>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Photo Gallery */}
-        {galleryPhotos.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16"
-          >
-            <h2 className="text-3xl font-bold mb-6">Photo Gallery</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {galleryPhotos.map((photo, index) => (
-                <motion.div
-                  key={photo.id}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative h-64 rounded-lg overflow-hidden group cursor-pointer"
-                  onClick={() => openLightbox(index)}
-                >
-                  <img
-                    src={photo.imageUrl}
-                    alt={photo.caption}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-white text-sm font-semibold">{photo.caption}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* Upcoming Events */}
-        {events.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-16"
-          >
-            <h2 className="text-3xl font-bold mb-6">Upcoming Events</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {events.map((event, index) => (
-                <Card key={event.id} className="bg-slate-900/50 backdrop-blur-sm border-slate-700 hover:border-blue-500 transition-all">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
-                    <div className="flex items-center space-x-2 text-sm text-gray-400 mb-3">
-                      <Calendar className="w-4 h-4 text-blue-500" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => navigate('/events')}
-                    >
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        <p className="text-sm text-gray-400 mb-4">{project.description}</p>
+                        {project.progress !== undefined && (
+                          <div>
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="text-gray-400">Progress</span>
+                              <span className="text-blue-400 font-semibold">{project.progress}%</span>
+                            </div>
+                            <div className="w-full bg-slate-700 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${project.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         )}
       </div>
 
       {/* Join Club Dialog */}
-      <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
+      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
         <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Join {club.name}</DialogTitle>
-            <DialogDescription>
-              Fill out the application form to join our club. We'll review your application and get back to you soon.
-            </DialogDescription>
+            <DialogTitle className="text-2xl">Join {club.name}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+
+          <form onSubmit={handleSubmitApplication} className="space-y-6 mt-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm mb-2">Full Name *</label>
+                <Label htmlFor="fullName">Full Name *</Label>
                 <Input
-                  value={applicationForm.fullName}
-                  onChange={(e) => setApplicationForm({ ...applicationForm, fullName: e.target.value })}
-                  placeholder="Your full name"
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  required
                   className="bg-slate-800 border-slate-700"
                 />
               </div>
               <div>
-                <label className="block text-sm mb-2">Email *</label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
+                  id="email"
                   type="email"
-                  value={applicationForm.email}
-                  onChange={(e) => setApplicationForm({ ...applicationForm, email: e.target.value })}
-                  placeholder="your.email@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
                   className="bg-slate-800 border-slate-700"
                 />
               </div>
@@ -481,109 +551,98 @@ export function ClubDetail() {
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm mb-2">Phone</label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
-                  value={applicationForm.phone}
-                  onChange={(e) => setApplicationForm({ ...applicationForm, phone: e.target.value })}
-                  placeholder="Your phone number"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="bg-slate-800 border-slate-700"
                 />
               </div>
               <div>
-                <label className="block text-sm mb-2">Department *</label>
+                <Label htmlFor="department">Department</Label>
                 <Input
-                  value={applicationForm.department}
-                  onChange={(e) => setApplicationForm({ ...applicationForm, department: e.target.value })}
-                  placeholder="e.g., Computer Science"
+                  id="department"
+                  value={formData.department}
+                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   className="bg-slate-800 border-slate-700"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Year of Study *</label>
-              <Select
-                value={applicationForm.year}
-                onValueChange={(value) => setApplicationForm({ ...applicationForm, year: value })}
+              <Label htmlFor="year">Year of Study</Label>
+              <select
+                id="year"
+                value={formData.year}
+                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
               >
-                <SelectTrigger className="bg-slate-800 border-slate-700">
-                  <SelectValue placeholder="Select your year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">First Year</SelectItem>
-                  <SelectItem value="2">Second Year</SelectItem>
-                  <SelectItem value="3">Third Year</SelectItem>
-                  <SelectItem value="4">Fourth Year</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="">Select Year</option>
+                <option value="1">First Year</option>
+                <option value="2">Second Year</option>
+                <option value="3">Third Year</option>
+                <option value="4">Fourth Year</option>
+              </select>
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Skills / Interests *</label>
+              <Label htmlFor="skills">Skills</Label>
               <Textarea
-                value={applicationForm.skills}
-                onChange={(e) => setApplicationForm({ ...applicationForm, skills: e.target.value })}
-                placeholder="List your relevant skills and interests..."
+                id="skills"
+                value={formData.skills}
+                onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
+                placeholder="List your relevant skills (e.g., CAD, Programming, Design)"
                 rows={3}
                 className="bg-slate-800 border-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Previous Experience (Optional)</label>
+              <Label htmlFor="motivation">Why do you want to join? *</Label>
               <Textarea
-                value={applicationForm.experience}
-                onChange={(e) => setApplicationForm({ ...applicationForm, experience: e.target.value })}
-                placeholder="Any relevant previous experience..."
-                rows={3}
-                className="bg-slate-800 border-slate-700"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2">Why do you want to join this club? *</label>
-              <Textarea
-                value={applicationForm.motivation}
-                onChange={(e) => setApplicationForm({ ...applicationForm, motivation: e.target.value })}
-                placeholder="Tell us about your motivation..."
+                id="motivation"
+                value={formData.motivation}
+                onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
+                placeholder="Tell us what motivates you to join this club"
                 rows={4}
+                required
                 className="bg-slate-800 border-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Portfolio / LinkedIn (Optional)</label>
+              <Label htmlFor="portfolio">Portfolio/LinkedIn (Optional)</Label>
               <Input
-                value={applicationForm.portfolio}
-                onChange={(e) => setApplicationForm({ ...applicationForm, portfolio: e.target.value })}
-                placeholder="https://..."
+                id="portfolio"
+                type="url"
+                value={formData.portfolio}
+                onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
+                placeholder="https://"
                 className="bg-slate-800 border-slate-700"
               />
             </div>
 
-            <div className="flex space-x-4 pt-4">
+            <div className="flex gap-3 pt-4 border-t border-slate-700">
               <Button
+                type="submit"
+                disabled={submitting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {submitting ? 'Submitting...' : 'Submit Application'}
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
-                onClick={() => setIsJoinDialogOpen(false)}
-                className="flex-1"
+                onClick={() => setShowJoinDialog(false)}
+                disabled={submitting}
               >
                 Cancel
               </Button>
-              <Button onClick={handleJoinClub} className="flex-1">
-                Submit Application
-              </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
-
-      {/* Image Lightbox */}
-      <ImageLightbox
-        images={lightboxImages}
-        initialIndex={lightboxIndex}
-        isOpen={lightboxOpen}
-        onClose={() => setLightboxOpen(false)}
-      />
     </div>
   );
 }

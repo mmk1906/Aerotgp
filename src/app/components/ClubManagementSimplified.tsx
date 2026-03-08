@@ -25,6 +25,7 @@ import {
   deleteClub,
   getClubApplications,
   updateClubApplication,
+  createClubMember,
   Club,
   ClubApplication
 } from '../services/databaseService';
@@ -145,8 +146,34 @@ export function ClubManagementSimplified() {
 
   const handleApproveApplication = async (applicationId: string) => {
     try {
+      // Find the application details
+      const application = applications.find(app => app.id === applicationId);
+      if (!application) {
+        toast.error('Application not found');
+        return;
+      }
+
+      // Update application status
       await updateClubApplication(applicationId, { status: 'approved' });
-      toast.success('Application approved!');
+
+      // Create club member entry
+      await createClubMember({
+        clubId: application.clubId,
+        clubName: application.clubName,
+        userId: application.userId || '',
+        userName: application.fullName,
+        email: application.email,
+        phone: application.phone,
+        department: application.department,
+        year: application.year,
+        role: 'Member',
+        contribution: '',
+        joinedDate: new Date().toISOString().split('T')[0],
+        status: 'active',
+        isFeatured: false,
+      });
+
+      toast.success('Application approved and member added!');
       await loadData();
     } catch (error) {
       console.error('Error approving application:', error);

@@ -6,17 +6,14 @@ import { toast } from 'sonner';
 import { 
   getCollection,
   getAllEvents,
-  getAllBlogs,
   getClubApplications,
   EventRegistration,
   Event,
-  Blog,
   ClubApplication,
 } from '../services/databaseService';
 import {
   exportEventRegistrationsToExcel,
   exportClubApplicationsToExcel,
-  exportBlogsToExcel,
   exportEventsToExcel,
   exportAllDataToExcel,
 } from '../services/excelExportService';
@@ -25,7 +22,7 @@ export function DataExportTab() {
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleExport = async (
-    dataType: 'users' | 'events' | 'clubs' | 'blogs' | 'registrations' | 'all'
+    dataType: 'users' | 'events' | 'clubs' | 'registrations' | 'all'
   ) => {
     setLoading(dataType);
     
@@ -60,29 +57,17 @@ export function DataExportTab() {
           exportClubApplicationsToExcel(clubApplications);
           toast.success(`Exported ${clubApplications.length} club applications to Excel`);
           break;
-          
-        case 'blogs':
-          const blogs = await getAllBlogs();
-          if (blogs.length === 0) {
-            toast.warning('No blogs to export');
-            return;
-          }
-          exportBlogsToExcel(blogs);
-          toast.success(`Exported ${blogs.length} blogs to Excel`);
-          break;
 
         case 'all':
-          const [allEvents, allRegs, allClubs, allBlogs] = await Promise.all([
+          const [allEvents, allRegs, allClubs] = await Promise.all([
             getAllEvents(),
             getCollection<EventRegistration>('registrations'),
-            getClubApplications(),
-            getAllBlogs()
+            getClubApplications()
           ]);
           exportAllDataToExcel({
             events: allEvents,
             registrations: allRegs,
             clubs: allClubs,
-            blogs: allBlogs,
           });
           toast.success('Exported all data to Excel');
           break;
@@ -120,12 +105,6 @@ export function DataExportTab() {
       title: 'Club Members',
       description: 'Export active club members list',
       icon: '✈️',
-    },
-    {
-      id: 'blogs',
-      title: 'Blog Posts',
-      description: 'Export published blog submissions',
-      icon: '📝',
     },
     {
       id: 'all',

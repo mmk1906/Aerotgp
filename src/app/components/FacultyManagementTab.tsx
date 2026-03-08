@@ -19,6 +19,7 @@ export function FacultyManagementTab() {
   const [formData, setFormData] = useState<Partial<Faculty>>({
     name: '',
     designation: '',
+    role: '',
     qualification: '',
     specialization: '',
     email: '',
@@ -51,6 +52,7 @@ export function FacultyManagementTab() {
     setFormData({
       name: '',
       designation: 'Assistant Professor',
+      role: 'Assistant Professor',
       qualification: '',
       specialization: '',
       email: '',
@@ -92,6 +94,7 @@ export function FacultyManagementTab() {
       setFormData({
         name: '',
         designation: '',
+        role: '',
         qualification: '',
         specialization: '',
         email: '',
@@ -285,6 +288,25 @@ export function FacultyManagementTab() {
                 <option value="Lecturer">Lecturer</option>
                 <option value="HOD">Head of Department</option>
               </select>
+            </div>
+
+            {/* Role */}
+            <div>
+              <Label htmlFor="role">Hierarchical Role *</Label>
+              <select
+                id="role"
+                value={formData.role || 'Assistant Professor'}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
+                required
+              >
+                <option value="HOD">HOD (Head of Department)</option>
+                <option value="Professor">Professor</option>
+                <option value="Associate Professor">Associate Professor</option>
+                <option value="Assistant Professor">Assistant Professor</option>
+                <option value="Other">Other</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">This determines display order on the Faculty page</p>
             </div>
 
             {/* Qualification */}

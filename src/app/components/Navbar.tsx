@@ -27,7 +27,6 @@ export function Navbar() {
     { name: 'Academics', path: '/academics' },
     { name: 'Events', path: '/events' },
     { name: 'Gallery', path: '/gallery' },
-    { name: 'Blogs', path: '/blogs' },
     { name: 'Contact', path: '/contact' },
   ];
 

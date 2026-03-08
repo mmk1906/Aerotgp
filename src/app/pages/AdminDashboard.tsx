@@ -15,7 +15,6 @@ import { Users, Calendar, DollarSign, TrendingUp, Plus, Edit, Trash2, Download, 
 import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
-import { BlogManagementTab } from '../components/BlogManagementTab';
 import { ClubManagementSimplified as ClubManagementTab } from '../components/ClubManagementSimplified';
 import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { FacultyManagementTab } from '../components/FacultyManagementTab';
@@ -93,26 +92,38 @@ export function AdminDashboard() {
   });
 
   useEffect(() => {
-    // Load applications from localStorage
-    const storedApplications = localStorage.getItem('aeroClubApplications');
-    if (storedApplications) {
-      setApplications(JSON.parse(storedApplications));
-    }
+    const loadData = async () => {
+      try {
+        // Load applications from localStorage
+        const storedApplications = localStorage.getItem('aeroClubApplications');
+        if (storedApplications) {
+          setApplications(JSON.parse(storedApplications));
+        }
 
-    // Load test attempts from localStorage
-    const storedAttempts = localStorage.getItem('testAttempts');
-    if (storedAttempts) {
-      setTestAttempts(JSON.parse(storedAttempts));
-    }
+        // Load test attempts from localStorage
+        const storedAttempts = localStorage.getItem('testAttempts');
+        if (storedAttempts) {
+          setTestAttempts(JSON.parse(storedAttempts));
+        }
 
-    // Fetch events from database
-    getAllEvents().then(setEvents);
+        // Fetch events from database
+        const eventsData = await getAllEvents();
+        setEvents(eventsData);
 
-    // Fetch registrations from database
-    getCollection<EventRegistration>('registrations').then(setRegistrations);
+        // Fetch registrations from database
+        const regsData = await getCollection<EventRegistration>('registrations');
+        setRegistrations(regsData);
 
-    // Fetch messages from database
-    getCollection<ContactMessage>('messages').then(setMessages);
+        // Fetch messages from database
+        const messagesData = await getCollection<ContactMessage>('messages');
+        setMessages(messagesData);
+      } catch (error) {
+        console.error('Error loading admin data:', error);
+        toast.error('Failed to load some data');
+      }
+    };
+
+    loadData();
   }, []);
 
   // Safety check - ProtectedRoute wrapper should prevent this
@@ -310,7 +321,6 @@ export function AdminDashboard() {
               <TabsTrigger value="events">Events</TabsTrigger>
               <TabsTrigger value="registrations">Registrations</TabsTrigger>
               <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
-              <TabsTrigger value="blogs">Blogs</TabsTrigger>
               <TabsTrigger value="clubs">Clubs</TabsTrigger>
               <TabsTrigger value="applications">
                 Applications
@@ -318,11 +328,11 @@ export function AdminDashboard() {
                   <Badge className="ml-2 bg-red-500">{stats.pendingApplications}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="photoGallery">Gallery</TabsTrigger>
               <TabsTrigger value="faculty">Faculty</TabsTrigger>
-              <TabsTrigger value="websiteContent">Content</TabsTrigger>
+              <TabsTrigger value="gallery">Gallery</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
-              <TabsTrigger value="export">Export Data</TabsTrigger>
+              <TabsTrigger value="content">Content</TabsTrigger>
+              <TabsTrigger value="export">Export</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
           </div>
@@ -497,10 +507,6 @@ export function AdminDashboard() {
             <QuizManagementTab />
           </TabsContent>
 
-          <TabsContent value="blogs">
-            <BlogManagementTab />
-          </TabsContent>
-
           <TabsContent value="clubs">
             <ClubManagementTab />
           </TabsContent>
@@ -609,20 +615,20 @@ export function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="photoGallery">
-            <PhotoGalleryManagement />
-          </TabsContent>
-
           <TabsContent value="faculty">
             <FacultyManagementTab />
           </TabsContent>
 
-          <TabsContent value="websiteContent">
-            <WebsiteContentManagement />
+          <TabsContent value="gallery">
+            <PhotoGalleryManagement />
           </TabsContent>
 
           <TabsContent value="messages">
             <MessagesManagement />
+          </TabsContent>
+
+          <TabsContent value="content">
+            <WebsiteContentManagement />
           </TabsContent>
 
           <TabsContent value="export">

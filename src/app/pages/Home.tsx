@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { ArrowRight, Users, Award, Rocket, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getAllEvents, getAllBlogs, getAllClubs, Event, Blog, Club } from '../services/databaseService';
+import { getAllEvents, getAllClubs, Event, Club } from '../services/databaseService';
 
 export function Home() {
   const [stats, setStats] = useState({
@@ -14,7 +14,6 @@ export function Home() {
     events: 0,
   });
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [latestBlogs, setLatestBlogs] = useState<Blog[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,9 +25,8 @@ export function Home() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [events, blogs, clubsData] = await Promise.all([
+      const [events, clubsData] = await Promise.all([
         getAllEvents(),
-        getAllBlogs(),
         getAllClubs()
       ]);
 
@@ -39,21 +37,10 @@ export function Home() {
         .slice(0, 3);
       setUpcomingEvents(upcoming);
 
-      // Get latest blogs
-      const latest = blogs
-        .filter(b => b.status === 'published')
-        .sort((a, b) => {
-          const dateA = b.publishedAt?.seconds || b.createdAt?.seconds || 0;
-          const dateB = a.publishedAt?.seconds || a.createdAt?.seconds || 0;
-          return dateB - dateA;
-        })
-        .slice(0, 3);
-      setLatestBlogs(latest);
-
       // Get active clubs
       setClubs(clubsData.filter(c => c.status === 'active'));
     } catch (error) {
-      console.error('Error loading home page data:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -89,8 +76,6 @@ export function Home() {
         setStats(targetStats);
       }
     }, interval);
-
-    return () => clearInterval(timer);
   };
 
   return (

@@ -2,7 +2,6 @@ import * as XLSX from 'xlsx';
 import { 
   EventRegistration, 
   ClubApplication, 
-  Blog,
   Event
 } from './databaseService';
 
@@ -87,42 +86,6 @@ export const exportClubApplicationsToExcel = (applications: ClubApplication[]) =
   XLSX.writeFile(workbook, fileName);
 };
 
-// Export Blogs to Excel
-export const exportBlogsToExcel = (blogs: Blog[]) => {
-  const data = blogs.map(blog => ({
-    'Blog ID': blog.id || 'N/A',
-    'Title': blog.title,
-    'Author': blog.authorName,
-    'Author Email': blog.authorEmail,
-    'Category': blog.category,
-    'Tags': blog.tags?.join(', ') || 'N/A',
-    'Status': blog.status,
-    'Views': blog.views || 0,
-    'Created At': formatDate(blog.createdAt),
-    'Published At': formatDate(blog.publishedAt),
-  }));
-
-  const worksheet = XLSX.utils.json_to_sheet(data);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Blogs');
-
-  worksheet['!cols'] = [
-    { wch: 15 }, // Blog ID
-    { wch: 40 }, // Title
-    { wch: 20 }, // Author
-    { wch: 30 }, // Author Email
-    { wch: 15 }, // Category
-    { wch: 30 }, // Tags
-    { wch: 12 }, // Status
-    { wch: 10 }, // Views
-    { wch: 20 }, // Created At
-    { wch: 20 }, // Published At
-  ];
-
-  const fileName = `Blogs_${new Date().toISOString().split('T')[0]}.xlsx`;
-  XLSX.writeFile(workbook, fileName);
-};
-
 // Export Events to Excel
 export const exportEventsToExcel = (events: Event[]) => {
   const data = events.map(event => ({
@@ -166,7 +129,6 @@ export const exportAllDataToExcel = (data: {
   events: Event[];
   registrations: EventRegistration[];
   clubs: ClubApplication[];
-  blogs: Blog[];
 }) => {
   const workbook = XLSX.utils.book_new();
 
@@ -214,20 +176,6 @@ export const exportAllDataToExcel = (data: {
     }));
     const clubsSheet = XLSX.utils.json_to_sheet(clubsData);
     XLSX.utils.book_append_sheet(workbook, clubsSheet, 'Club Applications');
-  }
-
-  // Blogs Sheet
-  if (data.blogs.length > 0) {
-    const blogsData = data.blogs.map(blog => ({
-      'Title': blog.title,
-      'Author': blog.authorName,
-      'Category': blog.category,
-      'Status': blog.status,
-      'Views': blog.views || 0,
-      'Created At': formatDate(blog.createdAt),
-    }));
-    const blogsSheet = XLSX.utils.json_to_sheet(blogsData);
-    XLSX.utils.book_append_sheet(workbook, blogsSheet, 'Blogs');
   }
 
   const fileName = `Department_Data_Export_${new Date().toISOString().split('T')[0]}.xlsx`;

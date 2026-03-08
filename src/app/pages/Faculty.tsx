@@ -10,7 +10,7 @@ export function Faculty() {
   const [faculty, setFaculty] = useState<FacultyType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const filters = ['all', 'Professor', 'Associate Professor', 'Assistant Professor'];
+  const filters = ['all', 'HOD', 'Professor', 'Associate Professor', 'Assistant Professor'];
 
   useEffect(() => {
     loadFaculty();
@@ -20,7 +20,23 @@ export function Faculty() {
     try {
       setLoading(true);
       const fetchedFaculty = await getAllFaculty();
-      setFaculty(fetchedFaculty);
+      
+      // Sort faculty by role hierarchy
+      const roleOrder = {
+        'HOD': 0,
+        'Professor': 1,
+        'Associate Professor': 2,
+        'Assistant Professor': 3,
+        'Other': 4
+      };
+      
+      const sortedFaculty = fetchedFaculty.sort((a, b) => {
+        const roleA = roleOrder[a.role || 'Other'] ?? 5;
+        const roleB = roleOrder[b.role || 'Other'] ?? 5;
+        return roleA - roleB;
+      });
+      
+      setFaculty(sortedFaculty);
     } catch (error) {
       console.error('Error loading faculty:', error);
       toast.error('Failed to load faculty members');
@@ -32,7 +48,7 @@ export function Faculty() {
   const filteredFaculty =
     filter === 'all'
       ? faculty
-      : faculty.filter((f) => f.designation.includes(filter));
+      : faculty.filter((f) => f.role === filter || f.designation.includes(filter));
 
   return (
     <div className="min-h-screen pt-24 pb-20">

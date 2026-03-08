@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -8,29 +8,21 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
-import { Plus, Edit, Trash2, Mail, Phone, Award, User as UserIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Mail, Phone, Award, User as UserIcon, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Faculty {
-  id: string;
-  name: string;
-  designation: string;
-  department: string;
-  email: string;
-  phone: string;
-  specialization: string;
-  qualification: string;
-  experience: string;
-  image: string;
-  researchAreas: string[];
-  publications: string;
-}
+import { 
+  getAllFaculty, 
+  createFaculty, 
+  updateFaculty, 
+  deleteFaculty, 
+  Faculty 
+} from '../services/databaseService';
 
 const DESIGNATIONS = [
+  'HOD',
   'Professor',
   'Associate Professor',
   'Assistant Professor',
-  'HOD',
   'Lab Instructor',
   'Visiting Faculty'
 ];
@@ -44,10 +36,8 @@ const QUALIFICATIONS = [
 ];
 
 export function FacultyManagement() {
-  const [faculty, setFaculty] = useState<Faculty[]>(() => {
-    const stored = localStorage.getItem('facultyMembers');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [faculty, setFaculty] = useState<Faculty[]>([]);
+  const [loading, setLoading] = useState(true);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -55,81 +45,150 @@ export function FacultyManagement() {
   const [newFaculty, setNewFaculty] = useState<Partial<Faculty>>({
     name: '',
     designation: 'Assistant Professor',
+    role: 'Assistant Professor',
     department: 'Aeronautical Engineering',
     email: '',
     phone: '',
     specialization: '',
     qualification: 'Ph.D.',
     experience: '',
-    image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
-    researchAreas: [],
-    publications: ''
+    photo: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
+    researchInterests: [],
+    publications: []
   });
 
-  const saveFaculty = (data: Faculty[]) => {
-    setFaculty(data);
-    localStorage.setItem('facultyMembers', JSON.stringify(data));
+  useEffect(() => {
+    loadFaculty();
+  }, []);
+
+  const loadFaculty = async () => {
+    try {
+      setLoading(true);
+      const fetchedFaculty = await getAllFaculty();
+      
+      // Sort faculty by role hierarchy
+      const roleOrder = {
+        'HOD': 0,
+        'Professor': 1,
+        'Associate Professor': 2,
+        'Assistant Professor': 3,
+        'Other': 4
+      };
+      
+      const sortedFaculty = fetchedFaculty.sort((a, b) => {
+        const roleA = roleOrder[a.role || 'Other'] ?? 5;
+        const roleB = roleOrder[b.role || 'Other'] ?? 5;
+        return roleA - roleB;
+      });
+      
+      setFaculty(sortedFaculty);
+    } catch (error) {
+      console.error('Error loading faculty:', error);
+      toast.error('Failed to load faculty members');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newFaculty.name || !newFaculty.email || !newFaculty.phone) {
       toast.error('Please fill all required fields');
       return;
     }
 
-    const faculty: Faculty = {
-      id: `faculty-${Date.now()}`,
-      name: newFaculty.name!,
-      designation: newFaculty.designation!,
-      department: newFaculty.department!,
-      email: newFaculty.email!,
-      phone: newFaculty.phone!,
-      specialization: newFaculty.specialization!,
-      qualification: newFaculty.qualification!,
-      experience: newFaculty.experience!,
-      image: newFaculty.image!,
-      researchAreas: newFaculty.researchAreas!,
-      publications: newFaculty.publications!
-    };
+    try {
+      // Map designation to role for proper hierarchy
+      const roleMapping: Record<string, Faculty['role']> = {
+        'HOD': 'HOD',
+        'Professor': 'Professor',
+        'Associate Professor': 'Associate Professor',
+        'Assistant Professor': 'Assistant Professor',
+        'Lab Instructor': 'Other',
+        'Visiting Faculty': 'Other'
+      };
 
-    saveFaculty([...faculty, faculty]);
-    setAddDialogOpen(false);
-    setNewFaculty({
-      name: '',
-      designation: 'Assistant Professor',
-      department: 'Aeronautical Engineering',
-      email: '',
-      phone: '',
-      specialization: '',
-      qualification: 'Ph.D.',
-      experience: '',
-      image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
-      researchAreas: [],
-      publications: ''
-    });
-    toast.success('Faculty member added successfully!');
+      const facultyData: Omit<Faculty, 'id'> = {
+        name: newFaculty.name!,
+        designation: newFaculty.designation!,
+        role: roleMapping[newFaculty.designation!] || 'Other',
+        qualification: newFaculty.qualification!,
+        specialization: newFaculty.specialization!,
+        email: newFaculty.email!,
+        phone: newFaculty.phone,
+        photo: newFaculty.photo!,
+        department: newFaculty.department,
+        experience: newFaculty.experience,
+        researchInterests: newFaculty.researchInterests,
+        publications: newFaculty.publications
+      };
+
+      await createFaculty(facultyData as Faculty);
+      await loadFaculty(); // Reload faculty list
+      setAddDialogOpen(false);
+      setNewFaculty({
+        name: '',
+        designation: 'Assistant Professor',
+        role: 'Assistant Professor',
+        department: 'Aeronautical Engineering',
+        email: '',
+        phone: '',
+        specialization: '',
+        qualification: 'Ph.D.',
+        experience: '',
+        photo: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
+        researchInterests: [],
+        publications: []
+      });
+      toast.success('Faculty member added successfully!');
+    } catch (error) {
+      console.error('Error adding faculty:', error);
+      toast.error('Failed to add faculty member');
+    }
   };
 
-  const handleEdit = () => {
-    if (!selectedFaculty) return;
+  const handleEdit = async () => {
+    if (!selectedFaculty || !selectedFaculty.id) return;
 
-    const updated = faculty.map(f => 
-      f.id === selectedFaculty.id ? selectedFaculty : f
-    );
-    saveFaculty(updated);
-    setEditDialogOpen(false);
-    setSelectedFaculty(null);
-    toast.success('Faculty member updated successfully!');
+    try {
+      // Map designation to role for proper hierarchy
+      const roleMapping: Record<string, Faculty['role']> = {
+        'HOD': 'HOD',
+        'Professor': 'Professor',
+        'Associate Professor': 'Associate Professor',
+        'Assistant Professor': 'Assistant Professor',
+        'Lab Instructor': 'Other',
+        'Visiting Faculty': 'Other'
+      };
+
+      const updateData = {
+        ...selectedFaculty,
+        role: roleMapping[selectedFaculty.designation] || 'Other'
+      };
+
+      await updateFaculty(selectedFaculty.id, updateData);
+      await loadFaculty(); // Reload faculty list
+      setEditDialogOpen(false);
+      setSelectedFaculty(null);
+      toast.success('Faculty member updated successfully!');
+    } catch (error) {
+      console.error('Error updating faculty:', error);
+      toast.error('Failed to update faculty member');
+    }
   };
 
-  const handleDelete = () => {
-    if (!selectedFaculty) return;
+  const handleDelete = async () => {
+    if (!selectedFaculty || !selectedFaculty.id) return;
 
-    const updated = faculty.filter(f => f.id !== selectedFaculty.id);
-    saveFaculty(updated);
-    setDeleteDialogOpen(false);
-    setSelectedFaculty(null);
-    toast.success('Faculty member deleted successfully!');
+    try {
+      await deleteFaculty(selectedFaculty.id);
+      await loadFaculty(); // Reload faculty list
+      setDeleteDialogOpen(false);
+      setSelectedFaculty(null);
+      toast.success('Faculty member deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting faculty:', error);
+      toast.error('Failed to delete faculty member');
+    }
   };
 
   return (
@@ -197,7 +256,12 @@ export function FacultyManagement() {
           <CardTitle>Faculty Members</CardTitle>
         </CardHeader>
         <CardContent>
-          {faculty.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500 mr-3" />
+              <span className="text-gray-400">Loading faculty members...</span>
+            </div>
+          ) : faculty.length === 0 ? (
             <div className="text-center py-12">
               <UserIcon className="w-16 h-16 mx-auto text-gray-500 mb-4" />
               <p className="text-gray-400">No faculty members added yet</p>
@@ -223,7 +287,7 @@ export function FacultyManagement() {
                       <CardContent className="p-6">
                         <div className="flex gap-4">
                           <img 
-                            src={member.image} 
+                            src={member.photo} 
                             alt={member.name}
                             className="w-20 h-20 rounded-full object-cover"
                           />
@@ -274,9 +338,9 @@ export function FacultyManagement() {
                               </div>
                             </div>
 
-                            {member.researchAreas && member.researchAreas.length > 0 && (
+                            {member.researchInterests && member.researchInterests.length > 0 && (
                               <div className="mt-3 flex flex-wrap gap-2">
-                                {member.researchAreas.map((area, idx) => (
+                                {member.researchInterests.map((area, idx) => (
                                   <span 
                                     key={idx}
                                     className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs"
@@ -395,10 +459,10 @@ export function FacultyManagement() {
               <Label>Research Areas (comma-separated)</Label>
               <Input
                 placeholder="Aerodynamics, CFD, Aircraft Design"
-                value={newFaculty.researchAreas?.join(', ')}
+                value={newFaculty.researchInterests?.join(', ')}
                 onChange={(e) => setNewFaculty({ 
                   ...newFaculty, 
-                  researchAreas: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                  researchInterests: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                 })}
               />
             </div>
@@ -417,8 +481,8 @@ export function FacultyManagement() {
               <Label>Profile Image URL</Label>
               <Input
                 placeholder="https://example.com/image.jpg"
-                value={newFaculty.image}
-                onChange={(e) => setNewFaculty({ ...newFaculty, image: e.target.value })}
+                value={newFaculty.photo}
+                onChange={(e) => setNewFaculty({ ...newFaculty, photo: e.target.value })}
               />
             </div>
           </div>
@@ -429,15 +493,16 @@ export function FacultyManagement() {
               setNewFaculty({
                 name: '',
                 designation: 'Assistant Professor',
+                role: 'Assistant Professor',
                 department: 'Aeronautical Engineering',
                 email: '',
                 phone: '',
                 specialization: '',
                 qualification: 'Ph.D.',
                 experience: '',
-                image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
-                researchAreas: [],
-                publications: ''
+                photo: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&q=80',
+                researchInterests: [],
+                publications: []
               });
             }}>
               Cancel
@@ -536,10 +601,10 @@ export function FacultyManagement() {
               <div>
                 <Label>Research Areas (comma-separated)</Label>
                 <Input
-                  value={selectedFaculty.researchAreas?.join(', ')}
+                  value={selectedFaculty.researchInterests?.join(', ')}
                   onChange={(e) => setSelectedFaculty({ 
                     ...selectedFaculty, 
-                    researchAreas: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                    researchInterests: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                   })}
                 />
               </div>

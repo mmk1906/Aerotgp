@@ -187,35 +187,6 @@ export const getUserRegistrations = (userId: string) =>
 export const getEventRegistrations = (eventId: string) => 
   getCollection<EventRegistration>('registrations', [where('eventId', '==', eventId)]);
 
-// Blog operations
-export interface Blog {
-  id?: string;
-  title: string;
-  authorId: string;
-  authorName: string;
-  content: string;
-  excerpt?: string;
-  category: string;
-  tags?: string[];
-  status: 'draft' | 'pending' | 'published' | 'rejected';
-  imageUrl?: string;
-  likes?: number;
-  views?: number;
-  createdAt?: any;
-  updatedAt?: any;
-}
-
-export const createBlog = (data: Blog) => createDocument('blogs', data);
-export const getBlog = (blogId: string) => getDocument<Blog>('blogs', blogId);
-export const updateBlog = (blogId: string, data: Partial<Blog>) => 
-  updateDocument('blogs', blogId, data);
-export const deleteBlog = (blogId: string) => deleteDocument('blogs', blogId);
-export const getAllBlogs = () => getCollection<Blog>('blogs');
-export const getPublishedBlogs = () => 
-  getCollection<Blog>('blogs', [where('status', '==', 'published'), orderBy('createdAt', 'desc')]);
-export const getUserBlogs = (userId: string) => 
-  getCollection<Blog>('blogs', [where('authorId', '==', userId)]);
-
 // Gallery operations
 export interface GalleryItem {
   id?: string;
@@ -358,27 +329,69 @@ export const updateClubApplication = (applicationId: string, data: Partial<ClubA
 
 export interface ClubMember {
   id?: string;
+  clubId: string;
+  clubName?: string;
   userId: string;
-  name: string;
+  userName: string;
   email: string;
   phone?: string;
+  photo?: string;
   department?: string;
   year?: string;
-  role?: string;
-  position?: string;
-  joinedDate?: string;
+  role: 'Member' | 'Core Member' | 'Lead' | 'Coordinator' | 'President' | 'Vice President';
+  contribution?: string; // Short description of what they do
+  joinedDate: string;
   status: 'active' | 'inactive';
+  isFeatured?: boolean; // For highlighting member of the month
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface MemberProgress {
+  id?: string;
+  clubId: string;
+  memberId: string;
+  userId: string;
+  userName: string;
+  projectsCompleted: number;
+  tasksContributed: number;
+  achievements: string[]; // Array of achievement descriptions
+  eventsParticipated: string[]; // Array of event names
+  skillsDeveloped: string[]; // Array of skills
+  progressDescription?: string;
+  lastUpdated?: any;
   createdAt?: any;
   updatedAt?: any;
 }
 
 export const createClubMember = (data: ClubMember) => createDocument('clubMembers', data);
 export const getClubMember = (memberId: string) => getDocument<ClubMember>('clubMembers', memberId);
+export const getClubMembers = (clubId: string) => 
+  getCollection<ClubMember>('clubMembers', [where('clubId', '==', clubId)]);
+export const getUserClubMemberships = (userId: string) =>
+  getCollection<ClubMember>('clubMembers', [where('userId', '==', userId)]);
 export const updateClubMember = (memberId: string, data: Partial<ClubMember>) => 
   updateDocument('clubMembers', memberId, data);
 export const deleteClubMember = (memberId: string) => deleteDocument('clubMembers', memberId);
 export const getActiveClubMembers = () => 
   getCollection<ClubMember>('clubMembers', [where('status', '==', 'active')]);
+export const getFeaturedClubMembers = (clubId: string) =>
+  getCollection<ClubMember>('clubMembers', [
+    where('clubId', '==', clubId),
+    where('isFeatured', '==', true)
+  ]);
+
+export const createMemberProgress = (data: MemberProgress) => createDocument('memberProgress', data);
+export const getMemberProgress = (progressId: string) => getDocument<MemberProgress>('memberProgress', progressId);
+export const getMemberProgressByUser = (userId: string, clubId: string) =>
+  getCollection<MemberProgress>('memberProgress', [
+    where('userId', '==', userId),
+    where('clubId', '==', clubId)
+  ]);
+export const updateMemberProgress = (progressId: string, data: Partial<MemberProgress>) =>
+  updateDocument('memberProgress', progressId, data);
+export const getClubMemberProgress = (clubId: string) =>
+  getCollection<MemberProgress>('memberProgress', [where('clubId', '==', clubId)]);
 
 // MCQ Test operations
 export interface MCQTest {
@@ -425,6 +438,7 @@ export interface Faculty {
   id?: string;
   name: string;
   designation: string;
+  role?: 'HOD' | 'Professor' | 'Associate Professor' | 'Assistant Professor' | 'Other'; // Role-based hierarchy
   qualification: string;
   specialization: string;
   email: string;
