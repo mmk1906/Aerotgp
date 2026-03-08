@@ -1,6 +1,5 @@
 // Firebase configuration and initialization
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -25,6 +24,11 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const realtimeDb = getDatabase(app);
-export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
+// Analytics disabled to prevent errors in unsupported environments
+// Re-enable when needed in production by uncommenting below:
+// import { getAnalytics, isSupported } from "firebase/analytics";
+// export const analytics = await isSupported() ? getAnalytics(app) : null;
+export const analytics = null;
 
 export default app;

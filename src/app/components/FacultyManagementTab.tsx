@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Users, Plus, Edit, Trash2, Mail, Phone, Award } from 'lucide-react';
 import { toast } from 'sonner';
@@ -229,6 +229,9 @@ export function FacultyManagementTab() {
             <DialogTitle className="text-2xl text-white">
               {editingFaculty ? 'Edit Faculty Member' : 'Add Faculty Member'}
             </DialogTitle>
+            <DialogDescription className="text-sm text-gray-400">
+              {editingFaculty ? 'Update the details of an existing faculty member.' : 'Add a new faculty member to the database.'}
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">

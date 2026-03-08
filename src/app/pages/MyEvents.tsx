@@ -195,7 +195,7 @@ export function MyEvents() {
           >
             <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
               <CardContent className="p-6 text-center">
-                <p className="text-3xl font-bold mb-1 " className={stat.color}>
+                <p className={`text-3xl font-bold mb-1 ${stat.color}`}>
                   {stat.value}
                 </p>
                 <p className="text-sm text-gray-400">{stat.label}</p>

@@ -3,7 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { CloudinaryImageUploader } from './CloudinaryImageUploader';
 import { createEvent, Event } from '../services/databaseService';
@@ -79,6 +79,9 @@ export function EventCreateDialog({ open, onOpenChange, onEventCreated }: EventC
       <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Create New Event</DialogTitle>
+          <DialogDescription className="text-sm text-gray-500">
+            Fill in the details to create a new event.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           {/* Basic Information */}

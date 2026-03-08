@@ -168,13 +168,34 @@ export function Clubs() {
               <Rocket className="w-16 h-16 text-blue-400 mx-auto mb-4" />
               <h3 className="text-2xl font-bold mb-4">Want to Join a Club?</h3>
               <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-                Joining a club is easy! Browse our clubs, find one that matches your interests,
-                and submit a join request. Once approved by the admin, you'll become an official member.
+                Joining a club is easy! Follow these steps to get started:
               </p>
+              <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-8 text-left">
+                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mb-3 text-lg font-bold">1</div>
+                  <h4 className="font-semibold mb-2">Login or Sign Up</h4>
+                  <p className="text-sm text-gray-400">Create your account to get started with club membership.</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mb-3 text-lg font-bold">2</div>
+                  <h4 className="font-semibold mb-2">Complete Your Profile</h4>
+                  <p className="text-sm text-gray-400">Add your details in the Student Portal to verify your identity.</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mb-3 text-lg font-bold">3</div>
+                  <h4 className="font-semibold mb-2">Submit Join Request</h4>
+                  <p className="text-sm text-gray-400">Click on any club above and submit your join request for admin approval.</p>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Link to="/login">
                   <Button className="bg-blue-600 hover:bg-blue-700">
                     Login to Join
+                  </Button>
+                </Link>
+                <Link to="/portal/profile">
+                  <Button variant="outline">
+                    Go to Profile
                   </Button>
                 </Link>
                 <Link to="/contact">

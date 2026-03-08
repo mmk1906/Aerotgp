@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, User, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { CloudinaryImageUploader } from './CloudinaryImageUploader';
 import type { CloudinaryUploadResult } from '../services/cloudinaryService';
 import { toast } from 'sonner';
@@ -74,6 +74,9 @@ export function ProfilePhotoUploader({
               <User className="w-5 h-5 text-blue-500" />
               Update Profile Photo
             </DialogTitle>
+            <DialogDescription className="text-sm text-gray-300">
+              Choose a new profile photo to represent yourself.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">

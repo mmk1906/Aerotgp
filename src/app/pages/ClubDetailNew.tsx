@@ -134,7 +134,27 @@ export function ClubDetail() {
       // Get user profile
       const userProfile = await getUserProfile(user.uid);
       if (!userProfile) {
-        toast.error('User profile not found. Please update your profile first.');
+        toast.error('Please complete your profile first to join clubs.', {
+          duration: 5000,
+          action: {
+            label: 'Go to Profile',
+            onClick: () => window.location.href = '/portal/profile'
+          }
+        });
+        setShowJoinDialog(false);
+        return;
+      }
+
+      // Check if profile is complete
+      if (!userProfile.name || !userProfile.email) {
+        toast.error('Please complete your profile with name and email before joining clubs.', {
+          duration: 5000,
+          action: {
+            label: 'Go to Profile',
+            onClick: () => window.location.href = '/portal/profile'
+          }
+        });
+        setShowJoinDialog(false);
         return;
       }
 

@@ -1,5 +1,58 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { motion } from 'motion/react';
+import { 
+  Users, 
+  Calendar, 
+  TrendingUp, 
+  DollarSign, 
+  Plus, 
+  Download, 
+  Edit2, 
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Eye,
+  MessageSquare,
+  Award,
+  BookOpen,
+  UserPlus,
+  FileText,
+  Rocket
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Badge } from '../components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { useAuth } from '../context/AuthContext';
+import { 
+  Event, 
+  EventRegistration, 
+  AeroClubApplication, 
+  ContactMessage,
+  getAllEvents, 
+  createEvent, 
+  deleteEvent as deleteEventFromDb,
+  updateEventRegistration,
+  getCollection
+} from '../services/databaseService';
 import { toast } from 'sonner';
-import { ClubManagementSimplified as ClubManagementTab } from '../components/ClubManagementSimplified';
+import { QuizManagementTab } from '../components/QuizManagementTab';
+import { ClubsManagement } from '../components/admin/ClubsManagement';
+import { JoinRequestsManagement } from '../components/admin/JoinRequestsManagement';
+import { MembersManagement } from '../components/admin/MembersManagement';
+import { EventCreateDialog } from '../components/EventCreateDialog';
+import { FacultyManagementTab } from '../components/FacultyManagementTab';
+import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
+import { MessagesManagement } from '../components/MessagesManagement';
+import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
+import { DataExportTab } from '../components/DataExportTab';
+import { AdminSettings } from '../components/AdminSettings';
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -11,9 +64,6 @@ export function AdminDashboard() {
   const [selectedApplication, setSelectedApplication] = useState<AeroClubApplication | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isCreateQuizDialogOpen, setIsCreateQuizDialogOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [quizzes, setQuizzes] = useState<Quiz[]>(mockQuizzes);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -83,7 +133,6 @@ export function AdminDashboard() {
       }, 0),
     clubApplications: applications.length,
     pendingApplications: applications.filter(app => app.status === 'pending').length,
-    totalQuizzes: quizzes.length,
     totalTestAttempts: testAttempts.length,
   };
 
@@ -261,11 +310,8 @@ export function AdminDashboard() {
               <TabsTrigger value="events">Events</TabsTrigger>
               <TabsTrigger value="registrations">Registrations</TabsTrigger>
               <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
-              <TabsTrigger value="clubs">Clubs</TabsTrigger>
-              <TabsTrigger value="join-requests">Join Requests</TabsTrigger>
-              <TabsTrigger value="members">Members</TabsTrigger>
-              <TabsTrigger value="applications">
-                Applications
+              <TabsTrigger value="clubs">
+                Clubs
                 {stats.pendingApplications > 0 && (
                   <Badge className="ml-2 bg-red-500">{stats.pendingApplications}</Badge>
                 )}
@@ -312,7 +358,7 @@ export function AdminDashboard() {
                       </div>
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
-                          <Edit className="w-4 h-4" />
+                          <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="destructive"
@@ -450,7 +496,144 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="clubs">
-            <ClubsManagement />
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardContent className="pt-6">
+                <Tabs defaultValue="overview" className="space-y-6">
+                  <TabsList className="bg-slate-800/50">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="join-requests">
+                      Join Requests
+                      {stats.pendingApplications > 0 && (
+                        <Badge className="ml-2 bg-red-500 text-xs">{stats.pendingApplications}</Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="members">Members</TabsTrigger>
+                    <TabsTrigger value="applications">
+                      Applications
+                      {stats.pendingApplications > 0 && (
+                        <Badge className="ml-2 bg-yellow-600 text-xs">{stats.pendingApplications}</Badge>
+                      )}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="overview">
+                    <ClubsManagement />
+                  </TabsContent>
+
+                  <TabsContent value="join-requests">
+                    <JoinRequestsManagement />
+                  </TabsContent>
+
+                  <TabsContent value="members">
+                    <MembersManagement />
+                  </TabsContent>
+
+                  <TabsContent value="applications">
+                    <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="flex items-center">
+                            <Rocket className="w-5 h-5 mr-2 text-blue-500" />
+                            Aero Club Applications
+                          </CardTitle>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="secondary">
+                              Total: {applications.length}
+                            </Badge>
+                            <Badge className="bg-yellow-600">
+                              Pending: {stats.pendingApplications}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Applicant</TableHead>
+                              <TableHead>Department</TableHead>
+                              <TableHead>Year</TableHead>
+                              <TableHead>Submitted</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {applications.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                                  No applications yet
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              applications.map((app) => (
+                                <TableRow key={app.id}>
+                                  <TableCell>
+                                    <div>
+                                      <div className="font-semibold">{app.fullName}</div>
+                                      <div className="text-sm text-gray-400">{app.email}</div>
+                                      <div className="text-sm text-gray-400">{app.phone}</div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{app.department}</TableCell>
+                                  <TableCell>{app.yearOfStudy} Year</TableCell>
+                                  <TableCell>
+                                    {new Date(app.submittedAt).toLocaleDateString()}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant={
+                                        app.status === 'approved'
+                                          ? 'default'
+                                          : app.status === 'rejected'
+                                          ? 'destructive'
+                                          : 'secondary'
+                                      }
+                                    >
+                                      {app.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex space-x-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setSelectedApplication(app)}
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </Button>
+                                      {app.status === 'pending' && (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="text-green-500 hover:text-green-600"
+                                            onClick={() => handleApproveApplication(app.id)}
+                                          >
+                                            <CheckCircle className="w-4 h-4" />
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => handleRejectApplication(app.id)}
+                                          >
+                                            <XCircle className="w-4 h-4" />
+                                          </Button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="join-requests">
