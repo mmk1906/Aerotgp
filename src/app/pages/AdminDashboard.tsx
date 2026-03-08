@@ -17,6 +17,9 @@ import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
 import { ClubManagementSimplified as ClubManagementTab } from '../components/ClubManagementSimplified';
 import { ClubMembersManagement } from '../components/ClubMembersManagement';
+import { ClubsManagement } from '../components/admin/ClubsManagement';
+import { MembersManagement } from '../components/admin/MembersManagement';
+import { JoinRequestsManagement } from '../components/admin/JoinRequestsManagement';
 import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { FacultyManagementTab } from '../components/FacultyManagementTab';
 import { QuizManagementTab } from '../components/QuizManagementTab';
@@ -323,6 +326,7 @@ export function AdminDashboard() {
               <TabsTrigger value="registrations">Registrations</TabsTrigger>
               <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
               <TabsTrigger value="clubs">Clubs</TabsTrigger>
+              <TabsTrigger value="join-requests">Join Requests</TabsTrigger>
               <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="applications">
                 Applications
@@ -510,11 +514,15 @@ export function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="clubs">
-            <ClubManagementTab />
+            <ClubsManagement />
+          </TabsContent>
+
+          <TabsContent value="join-requests">
+            <JoinRequestsManagement />
           </TabsContent>
 
           <TabsContent value="members">
-            <ClubMembersManagement />
+            <MembersManagement />
           </TabsContent>
 
           <TabsContent value="applications">
