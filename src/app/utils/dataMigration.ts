@@ -63,7 +63,7 @@ export const migrateLocalStorageToFirebase = async () => {
     console.log('Migrating MCQ tests...');
     for (const quiz of mockQuizzes) {
       try {
-        await createDocument('tests', {
+        await createDocument('quizzes', {
           subject: quiz.subject,
           title: quiz.title,
           description: quiz.description,

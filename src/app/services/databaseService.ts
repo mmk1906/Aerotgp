@@ -431,15 +431,15 @@ export interface MCQTestResult {
   createdAt?: any;
 }
 
-export const createMCQTest = (data: MCQTest) => createDocument('tests', data);
-export const getMCQTest = (testId: string) => getDocument<MCQTest>('tests', testId);
-export const getAllMCQTests = () => getCollection<MCQTest>('tests');
+export const createMCQTest = (data: MCQTest) => createDocument('quizzes', data);
+export const getMCQTest = (testId: string) => getDocument<MCQTest>('quizzes', testId);
+export const getAllMCQTests = () => getCollection<MCQTest>('quizzes');
 export const updateMCQTest = (testId: string, data: Partial<MCQTest>) => 
-  updateDocument('tests', testId, data);
-export const deleteMCQTest = (testId: string) => deleteDocument('tests', testId);
-export const createMCQTestResult = (data: MCQTestResult) => createDocument('testResults', data);
+  updateDocument('quizzes', testId, data);
+export const deleteMCQTest = (testId: string) => deleteDocument('quizzes', testId);
+export const createMCQTestResult = (data: MCQTestResult) => createDocument('quizAttempts', data);
 export const getUserTestResults = (userId: string) => 
-  getCollection<MCQTestResult>('testResults', [where('userId', '==', userId)]);
+  getCollection<MCQTestResult>('quizAttempts', [where('userId', '==', userId)]);
 
 // Faculty operations
 export interface Faculty {

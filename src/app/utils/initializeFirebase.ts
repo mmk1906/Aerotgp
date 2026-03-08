@@ -61,7 +61,7 @@ export const initializeFirestoreData = async () => {
     // Initialize MCQ Tests
     console.log('Initializing MCQ tests...');
     for (const quiz of mockQuizzes) {
-      await setDoc(doc(db, 'tests', quiz.id), {
+      await setDoc(doc(db, 'quizzes', quiz.id), {
         id: quiz.id,
         subject: quiz.subject,
         title: quiz.title,
@@ -135,8 +135,8 @@ export const clearFirestoreData = async () => {
     'users',
     'events',
     'registrations',
-    'tests',
-    'testResults',
+    'quizzes',
+    'quizAttempts',
     'blogs',
     'clubMembers',
     'gallery',

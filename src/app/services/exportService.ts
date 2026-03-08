@@ -137,7 +137,7 @@ export const exportData = (
   data: any[],
   fileName: string,
   format: 'excel' | 'csv' = 'excel',
-  dataType?: 'users' | 'events' | 'clubs' | 'blogs' | 'tests' | 'gallery'
+  dataType?: 'users' | 'events' | 'clubs' | 'blogs' | 'quizzes' | 'gallery'
 ): void => {
   let formattedData = data;
   
@@ -156,7 +156,7 @@ export const exportData = (
       case 'blogs':
         formattedData = formatBlogsForExport(data);
         break;
-      case 'tests':
+      case 'quizzes':
         formattedData = formatTestResultsForExport(data);
         break;
       case 'gallery':

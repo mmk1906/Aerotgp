@@ -9,6 +9,7 @@ import {
   onAuthStateChange,
 } from '../services/authService';
 import type { UserProfile } from '../services/authService';
+import { toast } from 'sonner';
 
 interface User {
   id: string;
@@ -107,6 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (error: any) {
       console.error('Registration error:', error);
+      
+      // Display user-friendly error message
+      const errorMessage = error.message || 'Registration failed. Please try again.';
+      toast.error(errorMessage);
+      
       return false;
     }
   };

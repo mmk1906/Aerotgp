@@ -8,7 +8,7 @@ import {
   User as FirebaseUser,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 export interface UserProfile {
@@ -25,6 +25,20 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
+// Check if email already exists in database
+export const checkEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('email', '==', email.toLowerCase()));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error: any) {
+    console.error('Error checking email existence:', error);
+    // If there's an error checking, assume email doesn't exist to allow registration attempt
+    return false;
+  }
+};
+
 // Register new user
 export const registerUser = async (
   name: string,
@@ -33,18 +47,24 @@ export const registerUser = async (
   additionalData?: Partial<UserProfile>
 ): Promise<UserProfile> => {
   try {
-    // Create user in Firebase Auth
+    // STEP 1: Check if email already exists in Firestore
+    const emailExists = await checkEmailExists(email);
+    if (emailExists) {
+      throw new Error('EMAIL_ALREADY_EXISTS');
+    }
+
+    // STEP 2: Create user in Firebase Auth
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Update display name
+    // STEP 3: Update display name
     await updateProfile(user, { displayName: name });
 
-    // Create user profile in Firestore
+    // STEP 4: Create user profile in Firestore
     const userProfile: UserProfile = {
       id: user.uid,
       name,
-      email,
+      email: email.toLowerCase(), // Store email in lowercase for consistency
       role: 'student', // Default role
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -56,7 +76,19 @@ export const registerUser = async (
     return userProfile;
   } catch (error: any) {
     console.error('Error registering user:', error);
-    throw new Error(error.message || 'Failed to register user');
+    
+    // Handle specific error cases
+    if (error.message === 'EMAIL_ALREADY_EXISTS') {
+      throw new Error('This email is already registered. Please log in instead.');
+    } else if (error.code === 'auth/email-already-in-use') {
+      throw new Error('This email is already registered. Please log in instead.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email format. Please enter a valid email address.');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Password is too weak. Please use at least 6 characters.');
+    } else {
+      throw new Error(error.message || 'Failed to register user. Please try again.');
+    }
   }
 };
 
