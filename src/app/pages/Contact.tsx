@@ -22,6 +22,12 @@ export function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.name || !formData.email || !formData.message) {
+      toast.error('Please fill in name, email, and message fields');
+      return;
+    }
+    
     try {
       setSubmitting(true);
 
@@ -29,8 +35,8 @@ export function Contact() {
       await createContactMessage({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
-        subject: formData.subject,
+        phone: formData.phone || '',
+        subject: formData.subject || 'General Inquiry',
         message: formData.message,
         date: new Date().toISOString(),
         status: 'new',
@@ -38,7 +44,7 @@ export function Contact() {
 
       // Show success message
       setSubmitted(true);
-      toast.success('Your message has been sent successfully. We will contact you soon.');
+      toast.success('Message sent successfully! We will get back to you soon.');
 
       // Reset form after 3 seconds
       setTimeout(() => {
@@ -47,7 +53,7 @@ export function Contact() {
       }, 3000);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again or contact us directly.');
     } finally {
       setSubmitting(false);
     }

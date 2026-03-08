@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Download, BookOpen, Calendar, Clock, Award, Play, Lock, Library, ExternalLink } from 'lucide-react';
+import { Download, BookOpen, Calendar, Clock, Award, Play, Lock, Library, ExternalLink, Loader2 } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 import { MCQTest, Quiz } from '../components/MCQTest';
-import { mockQuizzes } from '../data/quizData';
+import { getAllMCQTests, MCQTest as FirebaseMCQTest } from '../services/databaseService';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -14,6 +14,45 @@ export function Academics() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadQuizzes();
+  }, []);
+
+  const loadQuizzes = async () => {
+    try {
+      setLoading(true);
+      const firebaseQuizzes = await getAllMCQTests();
+      
+      // Transform Firebase MCQTest to Quiz format
+      const transformedQuizzes: Quiz[] = firebaseQuizzes.map((test) => ({
+        id: test.id!,
+        title: test.title,
+        description: test.description || '',
+        subject: test.subject,
+        questions: test.questions.map((q: any, index: number) => ({
+          id: `${test.id}-q${index}`,
+          questionText: q.question || q.questionText,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation || '',
+        })),
+        timeLimit: test.timeLimit || test.duration || 30,
+        difficulty: test.difficulty || 'Medium',
+        allowMultipleAttempts: test.allowMultipleAttempts ?? true,
+      }));
+
+      setQuizzes(transformedQuizzes);
+    } catch (error) {
+      console.error('Error loading quizzes:', error);
+      toast.error('Failed to load quizzes');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const courses = [
     {
       name: 'B.Tech in Aeronautical Engineering',
@@ -370,76 +409,94 @@ export function Academics() {
               Test your knowledge with our comprehensive quizzes on various aerospace subjects
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockQuizzes.map((quiz, index) => {
-              const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
-              const userAttempts = attempts.filter(
-                (a: any) => a.quizId === quiz.id && a.studentEmail === user?.email
-              );
-              const hasAttempted = userAttempts.length > 0;
-              const bestScore = hasAttempted
-                ? Math.max(...userAttempts.map((a: any) => a.score))
-                : null;
 
-              return (
-                <motion.div
-                  key={quiz.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 hover:border-blue-500 transition-all duration-300 h-full flex flex-col">
-                    <CardContent className="p-6 flex-1 flex flex-col">
-                      <div className="flex items-start justify-between mb-3">
-                        <BookOpen className="w-10 h-10 text-blue-500" />
-                        <Badge className={getDifficultyColor(quiz.difficulty)}>
-                          {quiz.difficulty}
-                        </Badge>
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">{quiz.title}</h3>
-                      <p className="text-sm text-gray-400 mb-4 flex-1">
-                        {quiz.description}
-                      </p>
-                      <div className="space-y-2 mb-4">
-                        <div className="flex items-center text-sm text-gray-400">
-                          <BookOpen className="w-4 h-4 mr-2" />
-                          {quiz.questions.length} Questions
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+              <span className="ml-3 text-gray-400">Loading quizzes...</span>
+            </div>
+          ) : quizzes.length === 0 ? (
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardContent className="p-12 text-center">
+                <BookOpen className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2 text-gray-300">No Quizzes Available</h3>
+                <p className="text-gray-400">
+                  Quizzes will be added soon. Check back later!
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {quizzes.map((quiz, index) => {
+                const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
+                const userAttempts = attempts.filter(
+                  (a: any) => a.quizId === quiz.id && a.studentEmail === user?.email
+                );
+                const hasAttempted = userAttempts.length > 0;
+                const bestScore = hasAttempted
+                  ? Math.max(...userAttempts.map((a: any) => a.score))
+                  : null;
+
+                return (
+                  <motion.div
+                    key={quiz.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 hover:border-blue-500 transition-all duration-300 h-full flex flex-col">
+                      <CardContent className="p-6 flex-1 flex flex-col">
+                        <div className="flex items-start justify-between mb-3">
+                          <BookOpen className="w-10 h-10 text-blue-500" />
+                          <Badge className={getDifficultyColor(quiz.difficulty)}>
+                            {quiz.difficulty}
+                          </Badge>
                         </div>
-                        <div className="flex items-center text-sm text-gray-400">
-                          <Clock className="w-4 h-4 mr-2" />
-                          {quiz.timeLimit} Minutes
-                        </div>
-                        {hasAttempted && bestScore !== null && (
-                          <div className="flex items-center text-sm text-green-400">
-                            <Award className="w-4 h-4 mr-2" />
-                            Best Score: {bestScore.toFixed(1)}%
+                        <h3 className="text-xl font-semibold mb-2">{quiz.title}</h3>
+                        <p className="text-sm text-gray-400 mb-4 flex-1">
+                          {quiz.description}
+                        </p>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center text-sm text-gray-400">
+                            <BookOpen className="w-4 h-4 mr-2" />
+                            {quiz.questions.length} Questions
                           </div>
-                        )}
-                      </div>
-                      <Button
-                        className="w-full"
-                        onClick={() => handleStartTest(quiz)}
-                        disabled={hasAttempted && !quiz.allowMultipleAttempts}
-                      >
-                        {hasAttempted && !quiz.allowMultipleAttempts ? (
-                          <>
-                            <Lock className="w-4 h-4 mr-2" />
-                            Already Attempted
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            {hasAttempted ? 'Retake Test' : 'Start Test'}
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+                          <div className="flex items-center text-sm text-gray-400">
+                            <Clock className="w-4 h-4 mr-2" />
+                            {quiz.timeLimit} Minutes
+                          </div>
+                          {hasAttempted && bestScore !== null && (
+                            <div className="flex items-center text-sm text-green-400">
+                              <Award className="w-4 h-4 mr-2" />
+                              Best Score: {bestScore.toFixed(1)}%
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={() => handleStartTest(quiz)}
+                          disabled={hasAttempted && !quiz.allowMultipleAttempts}
+                        >
+                          {hasAttempted && !quiz.allowMultipleAttempts ? (
+                            <>
+                              <Lock className="w-4 h-4 mr-2" />
+                              Already Attempted
+                            </>
+                          ) : (
+                            <>
+                              <Play className="w-4 h-4 mr-2" />
+                              {hasAttempted ? 'Retake Test' : 'Start Test'}
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* Academic Calendar */}

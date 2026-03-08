@@ -46,27 +46,38 @@ export function JoinAeroClub() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Store in localStorage (mock database)
-    const applications = JSON.parse(localStorage.getItem('aeroClubApplications') || '[]');
-    const newApplication = {
-      id: Date.now().toString(),
-      ...data,
-      status: 'pending',
-      submittedAt: new Date().toISOString(),
-    };
-    applications.push(newApplication);
-    localStorage.setItem('aeroClubApplications', JSON.stringify(applications));
-    
-    setIsSubmitting(false);
-    setIsSuccess(true);
-    toast.success('Application submitted successfully!');
-    
-    setTimeout(() => {
-      navigate('/clubs');
-    }, 3000);
+    try {
+      // Save to Firebase instead of localStorage
+      const { createClubApplication } = await import('../services/databaseService');
+      
+      await createClubApplication({
+        clubId: 'aero-club',
+        clubName: 'Aero Club',
+        userId: 'guest',
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone || '',
+        department: data.department || '',
+        year: data.yearOfStudy || '',
+        skills: data.technicalSkills || '',
+        experience: data.projectExperience || '',
+        motivation: data.motivation,
+        portfolio: data.portfolio || '',
+        status: 'pending',
+      });
+      
+      setIsSubmitting(false);
+      setIsSuccess(true);
+      toast.success('Application submitted successfully! We will contact you soon.');
+      
+      setTimeout(() => {
+        navigate('/clubs');
+      }, 3000);
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      setIsSubmitting(false);
+      toast.error('Failed to submit application. Please try again.');
+    }
   };
 
   if (isSuccess) {
@@ -189,39 +200,27 @@ export function JoinAeroClub() {
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">
-                        Phone Number <span className="text-red-500">*</span>
+                        Phone Number (Optional)
                       </Label>
                       <Input
                         id="phone"
                         type="tel"
-                        {...register('phone', {
-                          required: 'Phone number is required',
-                          pattern: {
-                            value: /^[0-9]{10}$/,
-                            message: 'Please enter a valid 10-digit phone number'
-                          }
-                        })}
+                        {...register('phone')}
                         placeholder="1234567890"
                         className="bg-slate-800/50 border-slate-600"
                       />
-                      {errors.phone && (
-                        <p className="text-red-500 text-sm">{errors.phone.message}</p>
-                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="prn">
-                        PRN/Enrollment Number <span className="text-red-500">*</span>
+                        PRN/Enrollment Number (Optional)
                       </Label>
                       <Input
                         id="prn"
-                        {...register('prn', { required: 'PRN is required' })}
+                        {...register('prn')}
                         placeholder="Enter your PRN"
                         className="bg-slate-800/50 border-slate-600"
                       />
-                      {errors.prn && (
-                        <p className="text-red-500 text-sm">{errors.prn.message}</p>
-                      )}
                     </div>
                   </div>
                 </div>

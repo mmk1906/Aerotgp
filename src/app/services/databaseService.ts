@@ -107,6 +107,11 @@ export const getCollection = async <T>(
       ...doc.data(),
     })) as T[];
   } catch (error: any) {
+    // If it's a permission error, log warning but don't throw
+    if (error.code === 'permission-denied') {
+      console.warn(`Permission denied for collection ${collectionName}. Returning empty array. Please update Firebase rules.`);
+      return [] as T[];
+    }
     console.error(`Error getting collection ${collectionName}:`, error);
     throw new Error(error.message || 'Failed to get collection');
   }
@@ -399,9 +404,12 @@ export interface MCQTest {
   subject: string;
   title: string;
   description?: string;
-  duration?: number;
+  duration?: number; // Also acts as timeLimit (in minutes)
+  timeLimit?: number; // Alias for duration (in minutes)
   totalQuestions: number;
   passingScore?: number;
+  difficulty?: 'Easy' | 'Medium' | 'Hard';
+  allowMultipleAttempts?: boolean;
   questions: any[];
   createdAt?: any;
   updatedAt?: any;

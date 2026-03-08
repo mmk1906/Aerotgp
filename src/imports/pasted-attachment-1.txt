@@ -1,0 +1,186 @@
+The Clubs section and Quiz system of the website are not functioning as expected. The current implementation lacks proper structure, admin control, and synchronization with other pages. Perform a complete redesign and functional refactor of the Clubs module and fix the Quiz–Academics integration while keeping the existing frontend design style.
+
+Do not apply temporary fixes. Instead, rebuild the logic so the system works reliably.
+
+---
+
+1. Redesign the Clubs Page Structure
+
+The Clubs page should be structured clearly and contain the following sections for each club:
+
+• Club Banner / Cover Image
+• Club Description
+• Club Achievements
+• Club Statistics (members count, projects, events)
+• Active Members Section
+• Core Team Section
+• Member Progress Section
+• Club Events Section
+• Join Club Button
+
+Each club should open a **dedicated club profile page** where all these details are displayed.
+
+---
+
+2. Fix Admin Club Management
+
+The admin dashboard must fully control club data.
+
+Admin should be able to:
+
+• Add new clubs
+• Edit existing clubs
+• Delete clubs
+• Upload club images
+• Update club description
+• Add members to clubs
+• Edit member roles
+• Remove members from clubs
+
+Currently the admin cannot edit existing clubs or add members. Fix the CRUD operations so they work properly.
+
+Admin must also be able to assign roles such as:
+
+• Club Lead
+• Core Member
+• Active Member
+
+---
+
+3. Create Club Member Management System
+
+Each club must maintain a proper member database.
+
+For each member store:
+
+• Name
+• Photo
+• Role in club
+• Department / Branch
+• Year
+• Achievements or contributions
+• Projects completed
+
+Members should be displayed in a **grid layout with photos**.
+
+Add a **Featured Members section** where the admin can highlight top contributors.
+
+---
+
+4. Member Progress Tracking
+
+Add a **Member Progress System** so members can track their club work.
+
+Each member should have:
+
+• Projects completed
+• Tasks assigned
+• Contributions to events
+• Achievements
+• Skill development progress
+
+Members should be able to update their progress from the user portal.
+
+Admin should be able to review and edit this progress if necessary.
+
+---
+
+5. Fix Join Club Workflow
+
+The Join Club form must work correctly.
+
+Correct workflow:
+
+User clicks Join Club
+→ Fills application form
+→ Application stored in database with status “Pending”
+→ Admin reviews request in admin dashboard
+→ Admin approves or rejects application
+→ Approved users automatically appear in club member list
+
+Ensure the join form saves data correctly and appears in the admin dashboard.
+
+---
+
+6. Fix Quiz and Academics Page Synchronization
+
+Currently the quiz system is not properly connected to the Academics section.
+
+Fix the architecture so that:
+
+• Quizzes belong to specific academic topics or subjects
+• Academics page fetches quiz data dynamically
+• Admin can create quizzes from the admin dashboard
+• Quizzes automatically appear in the relevant academic section
+
+Each quiz should include:
+
+• Quiz title
+• Subject / topic
+• Questions
+• Multiple choice options
+• Correct answers
+• Score calculation
+
+Ensure quiz results update correctly for users.
+
+---
+
+7. Fix Backend Data Flow
+
+Ensure proper data synchronization between:
+
+• Admin dashboard
+• User portal
+• Public website pages
+
+Whenever admin edits clubs, members, or quizzes, the changes must immediately appear on the website.
+
+Implement a consistent database structure for:
+
+clubs
+clubMembers
+clubApplications
+memberProgress
+quizzes
+quizResults
+
+---
+
+8. Remove Broken Logic and Duplicate Files
+
+Audit the project and remove:
+
+• Unused components
+• Duplicate club pages
+• Broken API routes
+• Dead code related to old club implementations
+
+Clean the codebase so the clubs module is simple and maintainable.
+
+---
+
+9. Maintain Existing UI Design
+
+Do not redesign the entire frontend.
+
+Keep the current:
+
+• Aerospace theme
+• Dark UI design
+• Animations
+• Responsive layout
+
+Only improve functionality and organization.
+
+---
+
+Final Goal
+
+Transform the Clubs section into a **fully functional club management system** where:
+
+• Admin can manage clubs and members easily
+• Users can join clubs and track their progress
+• Clubs display active members and achievements
+• Quiz system integrates correctly with the Academics page
+• All data stays synchronized across the platform.

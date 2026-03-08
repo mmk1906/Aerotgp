@@ -96,13 +96,23 @@ export function ClubDetail() {
       setMembers(membersData.filter(m => m.status === 'active'));
       setFeaturedMembers(membersData.filter(m => m.status === 'active' && m.isFeatured));
 
-      // Fetch projects
-      const projectsData = await getClubProjects(clubData.id!);
-      setProjects(projectsData);
+      // Fetch projects with fallback
+      try {
+        const projectsData = await getClubProjects(clubData.id!);
+        setProjects(projectsData);
+      } catch (projectError) {
+        console.warn('Could not load club projects (Firebase permissions may need updating):', projectError);
+        setProjects([]); // Fallback to empty array
+      }
 
-      // Fetch member progress
-      const progressData = await getClubMemberProgress(clubData.id!);
-      setProgress(progressData);
+      // Fetch member progress with fallback
+      try {
+        const progressData = await getClubMemberProgress(clubData.id!);
+        setProgress(progressData);
+      } catch (progressError) {
+        console.warn('Could not load member progress (Firebase permissions may need updating):', progressError);
+        setProgress([]); // Fallback to empty array
+      }
 
       // Fetch related events (simplified - could filter by club tag)
       const allEvents = await getAllEvents();
@@ -110,7 +120,10 @@ export function ClubDetail() {
 
     } catch (error) {
       console.error('Error loading club data:', error);
-      toast.error('Failed to load club details');
+      // Don't show error toast if it's just permissions for optional data
+      if (error instanceof Error && !error.message.includes('permission')) {
+        toast.error('Failed to load club details');
+      }
     } finally {
       setLoading(false);
     }

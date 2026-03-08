@@ -23,6 +23,7 @@ import { PortalAeroClub } from './pages/PortalAeroClub';
 import { PortalMyClubs } from './pages/PortalMyClubs';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+// Updated: 2026-03-08 - Contact and Join forms with Firebase integration
 export const router = createBrowserRouter([
   {
     path: '/',
