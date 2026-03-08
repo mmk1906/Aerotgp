@@ -16,7 +16,9 @@ import {
   Trash2,
   Eye,
   CheckCircle,
-  XCircle
+  XCircle,
+  Download,
+  Users as UsersIcon
 } from 'lucide-react';
 import { 
   getAllClubs,

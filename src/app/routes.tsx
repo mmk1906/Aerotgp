@@ -16,7 +16,7 @@ import { JoinAeroClub } from './pages/JoinAeroClub';
 import { PortalLayout } from './components/PortalLayout';
 import { ProtectedPortalLayout } from './components/ProtectedPortalLayout';
 import { StudentDashboard } from './pages/StudentDashboard';
-import { ProfileManagement } from './pages/ProfileManagement';
+import { ProfileManagement } from './pages/ProfileManagementNew';
 import { MyEvents } from './pages/MyEvents';
 import { PortalTests } from './pages/PortalTests';
 import { PortalAeroClub } from './pages/PortalAeroClub';

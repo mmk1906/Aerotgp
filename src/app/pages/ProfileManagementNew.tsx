@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -7,78 +7,174 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, Building2, Calendar, Award, BookOpen, Save, Camera, Lock } from 'lucide-react';
+import { User, Mail, Phone, Building2, Calendar, Award, BookOpen, Save, Camera, Lock, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { getUserProfile, updateUserProfile, UserProfile as AuthUserProfile } from '../services/authService';
+import { uploadToCloudinary } from '../services/cloudinaryService';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-interface UserProfile {
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  year: string;
-  prn: string;
-  skills: string[];
-  interests: string[];
-  bio: string;
-  profileImage: string;
+interface ExtendedUserProfile extends AuthUserProfile {
+  bio?: string;
+  skills?: string[];
+  interests?: string[];
 }
 
 export function ProfileManagement() {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>({
-    name: user?.name || '',
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  const [profile, setProfile] = useState<ExtendedUserProfile>({
+    id: user?.uid || '',
+    name: user?.displayName || '',
     email: user?.email || '',
+    role: 'student',
     phone: '',
     department: 'Aeronautical Engineering',
     year: '2nd Year',
     prn: '',
+    bio: '',
     skills: [],
     interests: [],
-    bio: '',
-    profileImage: '',
+    profilePhoto: '',
   });
+  
   const [newSkill, setNewSkill] = useState('');
   const [newInterest, setNewInterest] = useState('');
 
   useEffect(() => {
-    // Load profile from localStorage
-    const savedProfile = localStorage.getItem(`profile_${user?.id}`);
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
+    if (user) {
+      loadProfile();
     }
   }, [user]);
 
-  const handleSaveProfile = () => {
-    localStorage.setItem(`profile_${user?.id}`, JSON.stringify(profile));
-    toast.success('Profile updated successfully!');
-    setIsEditing(false);
+  const loadProfile = async () => {
+    try {
+      setLoading(true);
+      const userProfile = await getUserProfile(user!.uid);
+      
+      if (userProfile) {
+        setProfile({
+          ...userProfile,
+          bio: (userProfile as any).bio || '',
+          skills: (userProfile as any).skills || [],
+          interests: (userProfile as any).interests || [],
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast.error('Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      toast.info('Uploading image...');
+
+      const result = await uploadToCloudinary(file, 'profile');
+      
+      setProfile({ ...profile, profilePhoto: result.secure_url });
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+
+      await updateUserProfile(user!.uid, {
+        name: profile.name,
+        phone: profile.phone,
+        department: profile.department,
+        year: profile.year,
+        prn: profile.prn,
+        profilePhoto: profile.profilePhoto,
+        bio: profile.bio,
+        skills: profile.skills,
+        interests: profile.interests,
+      } as any);
+
+      toast.success('Profile updated successfully!');
+      setIsEditing(false);
+      await loadProfile();
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      setProfile({ ...profile, skills: [...profile.skills, newSkill.trim()] });
+    if (newSkill.trim() && !profile.skills?.includes(newSkill.trim())) {
+      setProfile({ ...profile, skills: [...(profile.skills || []), newSkill.trim()] });
       setNewSkill('');
     }
   };
 
   const handleRemoveSkill = (skill: string) => {
-    setProfile({ ...profile, skills: profile.skills.filter((s) => s !== skill) });
+    setProfile({ ...profile, skills: profile.skills?.filter((s) => s !== skill) });
   };
 
   const handleAddInterest = () => {
-    if (newInterest.trim() && !profile.interests.includes(newInterest.trim())) {
-      setProfile({ ...profile, interests: [...profile.interests, newInterest.trim()] });
+    if (newInterest.trim() && !profile.interests?.includes(newInterest.trim())) {
+      setProfile({ ...profile, interests: [...(profile.interests || []), newInterest.trim()] });
       setNewInterest('');
     }
   };
 
   const handleRemoveInterest = (interest: string) => {
-    setProfile({ ...profile, interests: profile.interests.filter((i) => i !== interest) });
+    setProfile({ ...profile, interests: profile.interests?.filter((i) => i !== interest) });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleImageUpload}
+        className="hidden"
+      />
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -89,19 +185,38 @@ export function ProfileManagement() {
           <h1 className="text-3xl font-bold mb-2">Profile Management</h1>
           <p className="text-gray-400">Manage your personal information and preferences</p>
         </div>
-        <Button
-          onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {isEditing ? (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </>
-          ) : (
-            'Edit Profile'
+        <div className="flex gap-2">
+          {isEditing && (
+            <Button
+              onClick={() => {
+                setIsEditing(false);
+                loadProfile();
+              }}
+              variant="outline"
+            >
+              Cancel
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : isEditing ? (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            ) : (
+              'Edit Profile'
+            )}
+          </Button>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -115,19 +230,28 @@ export function ProfileManagement() {
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="relative inline-block mb-4">
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                    {profile.profileImage ? (
+                  <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                    {uploadingImage ? (
+                      <Loader2 className="w-12 h-12 text-white animate-spin" />
+                    ) : profile.profilePhoto ? (
                       <img
-                        src={profile.profileImage}
+                        src={profile.profilePhoto}
                         alt="Profile"
-                        className="w-full h-full rounded-full object-cover"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
                       />
                     ) : (
                       <User className="w-16 h-16 text-white" />
                     )}
                   </div>
                   {isEditing && (
-                    <button className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition-colors">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingImage}
+                      className="absolute bottom-0 right-0 p-2 bg-blue-600 rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
                       <Camera className="w-4 h-4" />
                     </button>
                   )}
@@ -135,7 +259,7 @@ export function ProfileManagement() {
                 <h3 className="text-xl font-bold mb-1">{profile.name}</h3>
                 <p className="text-gray-400 mb-4">{profile.email}</p>
                 <Badge className="bg-blue-600/20 text-blue-400 border-blue-600/50">
-                  {user?.role === 'student' ? 'Student' : 'Admin'}
+                  {profile.role === 'student' ? 'Student' : 'Admin'}
                 </Badge>
               </div>
             </CardContent>
@@ -181,11 +305,11 @@ export function ProfileManagement() {
                       id="email"
                       type="email"
                       value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                      disabled={!isEditing}
+                      disabled
                       className="pl-10 bg-gray-800/50 border-gray-700"
                     />
                   </div>
+                  <p className="text-xs text-gray-500">Email cannot be changed</p>
                 </div>
 
                 <div className="space-y-2">
@@ -194,7 +318,7 @@ export function ProfileManagement() {
                     <Phone className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                     <Input
                       id="phone"
-                      value={profile.phone}
+                      value={profile.phone || ''}
                       onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                       disabled={!isEditing}
                       placeholder="+91 XXXXX XXXXX"
@@ -209,7 +333,7 @@ export function ProfileManagement() {
                     <BookOpen className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                     <Input
                       id="prn"
-                      value={profile.prn}
+                      value={profile.prn || ''}
                       onChange={(e) => setProfile({ ...profile, prn: e.target.value })}
                       disabled={!isEditing}
                       placeholder="Enter your PRN"
@@ -224,7 +348,7 @@ export function ProfileManagement() {
                     <Building2 className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                     <Input
                       id="department"
-                      value={profile.department}
+                      value={profile.department || 'Aeronautical Engineering'}
                       disabled
                       className="pl-10 bg-gray-800/50 border-gray-700"
                     />
@@ -235,18 +359,21 @@ export function ProfileManagement() {
                   <Label htmlFor="year">Year of Study</Label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-                    <select
-                      id="year"
-                      value={profile.year}
-                      onChange={(e) => setProfile({ ...profile, year: e.target.value })}
+                    <Select 
+                      value={profile.year || '2nd Year'} 
+                      onValueChange={(value) => setProfile({ ...profile, year: value })}
                       disabled={!isEditing}
-                      className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-md text-white disabled:opacity-50"
                     >
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                    </select>
+                      <SelectTrigger className="pl-10 bg-gray-800/50 border-gray-700">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700">
+                        <SelectItem value="1st Year">1st Year</SelectItem>
+                        <SelectItem value="2nd Year">2nd Year</SelectItem>
+                        <SelectItem value="3rd Year">3rd Year</SelectItem>
+                        <SelectItem value="4th Year">4th Year</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -255,7 +382,7 @@ export function ProfileManagement() {
                 <Label htmlFor="bio">Bio</Label>
                 <Textarea
                   id="bio"
-                  value={profile.bio}
+                  value={profile.bio || ''}
                   onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                   disabled={!isEditing}
                   placeholder="Tell us about yourself..."
@@ -300,7 +427,7 @@ export function ProfileManagement() {
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                {profile.skills.length > 0 ? (
+                {profile.skills && profile.skills.length > 0 ? (
                   profile.skills.map((skill) => (
                     <Badge
                       key={skill}
@@ -313,7 +440,7 @@ export function ProfileManagement() {
                           onClick={() => handleRemoveSkill(skill)}
                           className="ml-2 hover:text-red-400"
                         >
-                          ×
+                          <X className="w-3 h-3" />
                         </button>
                       )}
                     </Badge>
@@ -356,7 +483,7 @@ export function ProfileManagement() {
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
-                {profile.interests.length > 0 ? (
+                {profile.interests && profile.interests.length > 0 ? (
                   profile.interests.map((interest) => (
                     <Badge
                       key={interest}
@@ -369,7 +496,7 @@ export function ProfileManagement() {
                           onClick={() => handleRemoveInterest(interest)}
                           className="ml-2 hover:text-red-400"
                         >
-                          ×
+                          <X className="w-3 h-3" />
                         </button>
                       )}
                     </Badge>
@@ -382,28 +509,6 @@ export function ProfileManagement() {
           </Card>
         </motion.div>
       </div>
-
-      {/* Security Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Lock className="w-5 h-5 text-red-500" />
-              <span>Security</span>
-            </CardTitle>
-            <CardDescription>Manage your account security</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="text-red-400 border-red-600/50 hover:bg-red-600/20">
-              Change Password
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
     </div>
   );
 }

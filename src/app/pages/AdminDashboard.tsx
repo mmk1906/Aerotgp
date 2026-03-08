@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Quiz, Question } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
 import { ClubManagementSimplified as ClubManagementTab } from '../components/ClubManagementSimplified';
+import { ClubMembersManagement } from '../components/ClubMembersManagement';
 import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { FacultyManagementTab } from '../components/FacultyManagementTab';
 import { QuizManagementTab } from '../components/QuizManagementTab';
@@ -322,6 +323,7 @@ export function AdminDashboard() {
               <TabsTrigger value="registrations">Registrations</TabsTrigger>
               <TabsTrigger value="quizzes">MCQ Tests</TabsTrigger>
               <TabsTrigger value="clubs">Clubs</TabsTrigger>
+              <TabsTrigger value="members">Members</TabsTrigger>
               <TabsTrigger value="applications">
                 Applications
                 {stats.pendingApplications > 0 && (
@@ -509,6 +511,10 @@ export function AdminDashboard() {
 
           <TabsContent value="clubs">
             <ClubManagementTab />
+          </TabsContent>
+
+          <TabsContent value="members">
+            <ClubMembersManagement />
           </TabsContent>
 
           <TabsContent value="applications">
