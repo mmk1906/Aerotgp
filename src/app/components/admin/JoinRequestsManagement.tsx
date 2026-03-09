@@ -68,7 +68,7 @@ export function JoinRequestsManagement() {
 
     try {
       setProcessing(request.id!);
-      await approveJoinRequest(request.id!, user!.uid);
+      await approveJoinRequest(request.id!, user!.id);
       toast.success(`${request.userName} has been approved and added to ${request.clubName}!`);
       await loadRequests();
     } catch (error: any) {
@@ -79,22 +79,20 @@ export function JoinRequestsManagement() {
     }
   };
 
-  const handleRejectClick = (request: ClubJoinRequest) => {
+  const handleOpenRejectDialog = (request: ClubJoinRequest) => {
     setRejectingRequest(request);
     setRejectionReason('');
   };
 
-  const handleRejectConfirm = async () => {
-    if (!rejectingRequest) return;
-
-    if (!rejectionReason.trim()) {
-      toast.error('Please provide a reason for rejection');
+  const handleReject = async () => {
+    if (!rejectingRequest || !rejectionReason.trim()) {
+      toast.error('Please provide a rejection reason');
       return;
     }
 
     try {
       setProcessing(rejectingRequest.id!);
-      await rejectJoinRequest(rejectingRequest.id!, user!.uid, rejectionReason);
+      await rejectJoinRequest(rejectingRequest.id!, user!.id, rejectionReason);
       toast.success(`Request from ${rejectingRequest.userName} has been rejected`);
       setRejectingRequest(null);
       setRejectionReason('');
@@ -215,7 +213,7 @@ export function JoinRequestsManagement() {
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => handleRejectClick(request)}
+              onClick={() => handleOpenRejectDialog(request)}
               disabled={processing === request.id}
             >
               <XCircle className="w-4 h-4 mr-1" />
@@ -427,7 +425,7 @@ export function JoinRequestsManagement() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={handleRejectConfirm}
+                  onClick={handleReject}
                   disabled={processing === rejectingRequest.id || !rejectionReason.trim()}
                 >
                   {processing === rejectingRequest.id ? (

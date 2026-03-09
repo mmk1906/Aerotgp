@@ -55,8 +55,8 @@ export function MyClubs() {
       
       // Load user's clubs and requests in parallel
       const [memberships, requests, allClubs] = await Promise.all([
-        getUserClubMemberships(user!.uid),
-        getUserJoinRequests(user!.uid),
+        getUserClubMemberships(user!.id),
+        getUserJoinRequests(user!.id),
         getActiveClubs()
       ]);
 

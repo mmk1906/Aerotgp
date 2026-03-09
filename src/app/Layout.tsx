@@ -3,7 +3,6 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { Starfield } from './components/Starfield';
 import { ScrollToTop } from './components/ScrollToTop';
-import { Toaster } from './components/ui/sonner';
 
 export function Layout() {
   return (
@@ -15,7 +14,6 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <Toaster position="top-right" />
     </div>
   );
 }

@@ -62,15 +62,19 @@ export function Clubs() {
 
       // Load user's memberships and requests in parallel
       const [requests] = await Promise.all([
-        getUserJoinRequests(user.uid)
+        getUserJoinRequests(user.id)
       ]);
 
       // Check each club
       for (const club of clubs) {
-        if (!club.id) continue;
+        // Skip if club doesn't have an ID
+        if (!club.id) {
+          console.warn('Club missing ID:', club.name);
+          continue;
+        }
 
         // Check if member
-        const isMember = await isUserClubMember(user.uid, club.id);
+        const isMember = await isUserClubMember(user.id, club.id);
         if (isMember) {
           statusMap.set(club.id, { clubId: club.id, status: 'member' });
           continue;
@@ -108,7 +112,7 @@ export function Clubs() {
       setJoiningClub(club.id);
 
       // Get user profile
-      const userProfile = await getUserProfile(user.uid);
+      const userProfile = await getUserProfile(user.id);
       if (!userProfile) {
         toast.error('Please complete your profile first to join clubs.', {
           duration: 5000,
@@ -135,7 +139,7 @@ export function Clubs() {
       // Submit join request with auto-generated reason
       await submitJoinRequest(
         club.id,
-        user.uid,
+        user.id,
         {
           name: userProfile.name,
           email: userProfile.email,

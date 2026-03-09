@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   BookOpen,
-  Users
+  Users,
+  Bell
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +21,7 @@ import { Starfield } from './Starfield';
 import { ScrollToTop } from './ScrollToTop';
 
 export function PortalLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to open on desktop
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -31,6 +32,7 @@ export function PortalLayout() {
     { name: 'My Events', path: '/portal/my-events', icon: Calendar },
     { name: 'My Clubs', path: '/portal/my-clubs', icon: Users },
     { name: 'MCQ Tests', path: '/portal/tests', icon: GraduationCap },
+    { name: 'Announcements', path: '/portal/announcements', icon: Bell },
   ];
 
   const handleLogout = () => {
@@ -54,7 +56,7 @@ export function PortalLayout() {
           <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-gray-800 transition-colors lg:hidden"
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -87,9 +89,9 @@ export function PortalLayout() {
             width: sidebarOpen ? 280 : 0,
             opacity: sidebarOpen ? 1 : 0,
           }}
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-[#0f172a]/95 backdrop-blur-lg border-r border-gray-800 overflow-hidden z-40`}
+          className="fixed left-0 top-16 h-[calc(100vh-4rem)] bg-[#0f172a]/95 backdrop-blur-lg border-r border-gray-800 overflow-hidden z-40"
         >
-          <nav className="p-4 space-y-2">
+          <nav className="p-4 space-y-2 h-full overflow-y-auto">
             {portalLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.path;
@@ -98,7 +100,12 @@ export function PortalLayout() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => setSidebarOpen(false)} // Close sidebar on mobile after clicking
+                  onClick={() => {
+                    // Close sidebar on mobile after clicking
+                    if (window.innerWidth < 1024) {
+                      setSidebarOpen(false);
+                    }
+                  }}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'

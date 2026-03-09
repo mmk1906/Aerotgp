@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
+import { Suspense } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -25,5 +26,5 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
+  return <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900"><div className="text-white text-xl">Loading...</div></div>}>{children}</Suspense>;
 }

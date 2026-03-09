@@ -69,6 +69,14 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
+    // Club Join Requests
+    match /clubJoinRequests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
     // Clubs collection
     match /clubs/{clubId} {
       allow read: if true;
@@ -79,6 +87,20 @@ service cloud.firestore {
     match /tests/{testId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
+    }
+    
+    // Quizzes collection (for MCQ tests)
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    
+    // Quiz Attempts
+    match /quizAttempts/{attemptId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
     
     // Test Results
@@ -230,12 +252,17 @@ WHAT WAS FIXED
 ==========================================
 
 ✅ Added missing "clubs" collection read permissions
+✅ Added missing "quizzes" collection permissions (for MCQ tests)
+✅ Added missing "quizAttempts" collection permissions
+✅ Added missing "clubJoinRequests" collection permissions
 ✅ Fixed "blogs" collection read permissions (was blocking public access)
 ✅ Fixed "gallery" collection read permissions (was checking non-existent fields)
 ✅ Added "faculty" collection permissions
 ✅ Added "courses" collection permissions
 ✅ All public data (events, blogs, clubs, gallery, faculty, courses) now readable by everyone
-✅ Sensitive data (users, registrations, tests) still protected and requires authentication
+✅ Sensitive data (users, registrations, tests, quizzes) still protected and requires authentication
 ✅ Admin-only write permissions still enforced
+✅ Students can take quizzes and submit attempts
+✅ Students can join clubs and view join requests
 
 All errors should now be resolved! 🎉

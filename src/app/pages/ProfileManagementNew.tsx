@@ -6,10 +6,11 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
+import { PasswordInput } from '../components/ui/password-input';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Phone, Building2, Calendar, Award, BookOpen, Save, Camera, Lock, Loader2, X } from 'lucide-react';
+import { User, Mail, Phone, Building2, Calendar, Award, BookOpen, Save, Camera, Lock, Loader2, X, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { getUserProfile, updateUserProfile, UserProfile as AuthUserProfile } from '../services/authService';
+import { getUserProfile, updateUserProfile, UserProfile as AuthUserProfile, changePassword } from '../services/authService';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
@@ -28,8 +29,8 @@ export function ProfileManagement() {
   const [uploadingImage, setUploadingImage] = useState(false);
   
   const [profile, setProfile] = useState<ExtendedUserProfile>({
-    id: user?.uid || '',
-    name: user?.displayName || '',
+    id: user?.id || '',
+    name: user?.name || '',
     email: user?.email || '',
     role: 'student',
     phone: '',
@@ -44,6 +45,14 @@ export function ProfileManagement() {
   
   const [newSkill, setNewSkill] = useState('');
   const [newInterest, setNewInterest] = useState('');
+  
+  // Password change state
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   useEffect(() => {
     if (user) {
@@ -54,14 +63,19 @@ export function ProfileManagement() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const userProfile = await getUserProfile(user!.uid);
+      const userProfile = await getUserProfile(user!.id);
       
       if (userProfile) {
         setProfile({
           ...userProfile,
+          department: userProfile.department || 'Aeronautical Engineering',
+          year: userProfile.year || '2nd Year',
+          phone: userProfile.phone || '',
+          prn: userProfile.prn || '',
           bio: (userProfile as any).bio || '',
           skills: (userProfile as any).skills || [],
           interests: (userProfile as any).interests || [],
+          profilePhoto: userProfile.profilePhoto || '',
         });
       }
     } catch (error) {
@@ -108,7 +122,7 @@ export function ProfileManagement() {
     try {
       setSaving(true);
 
-      await updateUserProfile(user!.uid, {
+      await updateUserProfile(user!.id, {
         name: profile.name,
         phone: profile.phone,
         department: profile.department,
@@ -151,6 +165,47 @@ export function ProfileManagement() {
 
   const handleRemoveInterest = (interest: string) => {
     setProfile({ ...profile, interests: profile.interests?.filter((i) => i !== interest) });
+  };
+
+  const handleChangePassword = async () => {
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters');
+      return;
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast.error('New password must be different from current password');
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await changePassword(passwordData.currentPassword, passwordData.newPassword);
+      toast.success('Password changed successfully!');
+      
+      // Reset form
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -509,6 +564,85 @@ export function ProfileManagement() {
           </Card>
         </motion.div>
       </div>
+
+      {/* Password Change Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ShieldCheck className="w-5 h-5 text-red-500" />
+              <span>Change Password</span>
+            </CardTitle>
+            <CardDescription>Update your account password</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <PasswordInput
+                  id="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                  placeholder="Enter current password"
+                  className="bg-gray-800/50 border-gray-700"
+                  disabled={changingPassword}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <PasswordInput
+                  id="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                  placeholder="Enter new password"
+                  className="bg-gray-800/50 border-gray-700"
+                  disabled={changingPassword}
+                  minLength={6}
+                />
+                <p className="text-xs text-gray-500">Minimum 6 characters</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <PasswordInput
+                  id="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                  placeholder="Confirm new password"
+                  className="bg-gray-800/50 border-gray-700"
+                  disabled={changingPassword}
+                  minLength={6}
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <Button
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {changingPassword ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Changing Password...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Change Password
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 }

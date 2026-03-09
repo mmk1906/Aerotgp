@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router';
@@ -148,8 +149,7 @@ export function Login() {
                       </div>
                       <div>
                         <label className="block text-sm mb-2">Password</label>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           value={loginData.password}
                           onChange={(e) =>
                             setLoginData({ ...loginData, password: e.target.value })
@@ -219,8 +219,7 @@ export function Login() {
                       </div>
                       <div>
                         <label className="block text-sm mb-2">Password</label>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           value={registerData.password}
                           onChange={(e) =>
                             setRegisterData({ ...registerData, password: e.target.value })
@@ -235,8 +234,7 @@ export function Login() {
                       </div>
                       <div>
                         <label className="block text-sm mb-2">Confirm Password</label>
-                        <Input
-                          type="password"
+                        <PasswordInput
                           value={registerData.confirmPassword}
                           onChange={(e) =>
                             setRegisterData({ ...registerData, confirmPassword: e.target.value })

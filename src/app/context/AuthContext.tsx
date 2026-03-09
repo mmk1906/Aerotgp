@@ -152,3 +152,6 @@ export function useAuth() {
   }
   return context;
 }
+
+// Export AuthContext for debugging purposes
+export { AuthContext };

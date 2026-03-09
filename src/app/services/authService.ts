@@ -5,6 +5,9 @@ import {
   signOut,
   sendPasswordResetEmail,
   updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   User as FirebaseUser,
   onAuthStateChanged,
 } from 'firebase/auth';
@@ -125,16 +128,27 @@ export const logoutUser = async (): Promise<void> => {
 // Get user profile
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string') {
+      console.error('Invalid userId provided to getUserProfile:', userId);
+      return null;
+    }
+
     const userDoc = await getDoc(doc(db, 'users', userId));
     
     if (userDoc.exists()) {
-      return userDoc.data() as UserProfile;
+      const data = userDoc.data();
+      return {
+        id: userDoc.id,
+        ...data
+      } as UserProfile;
     }
     
     return null;
   } catch (error: any) {
     console.error('Error getting user profile:', error);
-    throw new Error(error.message || 'Failed to get user profile');
+    // Don't throw, just return null to prevent cascade errors
+    return null;
   }
 };
 
@@ -144,9 +158,17 @@ export const updateUserProfile = async (
   data: Partial<UserProfile>
 ): Promise<void> => {
   try {
+    // Filter out undefined values to prevent Firestore errors
+    const filteredData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as any);
+
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
-      ...data,
+      ...filteredData,
       updatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -178,5 +200,36 @@ export const checkAdminRole = async (userId: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error checking admin role:', error);
     return false;
+  }
+};
+
+// Change user password
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<void> => {
+  try {
+    const user = auth.currentUser;
+    
+    if (!user || !user.email) {
+      throw new Error('No authenticated user found');
+    }
+
+    // Reauthenticate user with current password
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // Update to new password
+    await updatePassword(user, newPassword);
+  } catch (error: any) {
+    console.error('Error changing password:', error);
+    
+    if (error.code === 'auth/wrong-password') {
+      throw new Error('Current password is incorrect');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('New password is too weak. Please use at least 6 characters.');
+    } else {
+      throw new Error(error.message || 'Failed to change password');
+    }
   }
 };

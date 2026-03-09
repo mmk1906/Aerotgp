@@ -1,12 +1,7 @@
 import { RouterProvider } from 'react-router';
-import { AuthProvider } from './context/AuthContext';
 import { router } from './routes';
 
-// Updated: 2026-03-08 - Fixed contact and join forms
+// Updated: 2026-03-09 - AuthProvider now inside router via RootLayout
 export default function App() {
-  return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
-  );
+  return <RouterProvider router={router} />;
 }

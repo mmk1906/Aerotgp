@@ -208,15 +208,26 @@ export const getUserClubMemberships = async (userId: string): Promise<ClubMember
 };
 
 export const isUserClubMember = async (userId: string, clubId: string): Promise<boolean> => {
-  const membersRef = collection(db, 'clubMembers');
-  const q = query(
-    membersRef,
-    where('userId', '==', userId),
-    where('clubId', '==', clubId),
-    where('isActive', '==', true)
-  );
-  const snapshot = await getDocs(q);
-  return !snapshot.empty;
+  try {
+    // Validate inputs
+    if (!userId || !clubId) {
+      console.warn('isUserClubMember: Invalid userId or clubId', { userId, clubId });
+      return false;
+    }
+
+    const membersRef = collection(db, 'clubMembers');
+    const q = query(
+      membersRef,
+      where('userId', '==', userId),
+      where('clubId', '==', clubId),
+      where('isActive', '==', true)
+    );
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('Error checking club membership:', error);
+    return false;
+  }
 };
 
 export const updateMemberRole = async (memberId: string, role: ClubMember['role']): Promise<void> => {
@@ -314,14 +325,32 @@ export const getPendingJoinRequests = async (): Promise<ClubJoinRequest[]> => {
 };
 
 export const getUserJoinRequests = async (userId: string): Promise<ClubJoinRequest[]> => {
-  const requestsRef = collection(db, 'clubJoinRequests');
-  const q = query(
-    requestsRef,
-    where('userId', '==', userId),
-    orderBy('submittedAt', 'desc')
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubJoinRequest));
+  // Validate userId to prevent Firestore errors
+  if (!userId || typeof userId !== 'string') {
+    console.warn('Invalid userId provided to getUserJoinRequests');
+    return [];
+  }
+
+  try {
+    const requestsRef = collection(db, 'clubJoinRequests');
+    // Simple query without orderBy to avoid index requirement
+    const q = query(
+      requestsRef,
+      where('userId', '==', userId)
+    );
+    const snapshot = await getDocs(q);
+    
+    // Sort in memory instead of using Firestore orderBy
+    const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubJoinRequest));
+    return requests.sort((a, b) => {
+      const aTime = a.submittedAt?.seconds || 0;
+      const bTime = b.submittedAt?.seconds || 0;
+      return bTime - aTime; // Descending order (newest first)
+    });
+  } catch (error) {
+    console.error('Error fetching user join requests:', error);
+    return [];
+  }
 };
 
 export const hasUserSentJoinRequest = async (userId: string, clubId: string): Promise<boolean> => {
@@ -379,17 +408,14 @@ export const submitJoinRequest = async (
     throw new Error('Club not found');
   }
 
-  // Create join request
+  // Create join request - filter out undefined values
   const requestsRef = collection(db, 'clubJoinRequests');
-  const request: Omit<ClubJoinRequest, 'id'> = {
+  const requestData: any = {
     clubId,
     clubName: club.name,
     userId,
     userName: userProfile.name,
     userEmail: userProfile.email,
-    userPhone: userProfile.phone,
-    userDepartment: userProfile.department,
-    userYear: userProfile.year,
     reason,
     status: 'pending',
     submittedAt: Timestamp.now(),
@@ -397,7 +423,18 @@ export const submitJoinRequest = async (
     updatedAt: Timestamp.now(),
   };
 
-  const docRef = await addDoc(requestsRef, request);
+  // Only add optional fields if they have values (not undefined)
+  if (userProfile.phone) {
+    requestData.userPhone = userProfile.phone;
+  }
+  if (userProfile.department) {
+    requestData.userDepartment = userProfile.department;
+  }
+  if (userProfile.year) {
+    requestData.userYear = userProfile.year;
+  }
+
+  const docRef = await addDoc(requestsRef, requestData);
   return docRef.id;
 };
 
@@ -433,15 +470,14 @@ export const approveJoinRequest = async (
   // 2. Create club member
   const membersRef = collection(db, 'clubMembers');
   const newMemberRef = doc(membersRef);
-  const newMember: Omit<ClubMember, 'id'> = {
+  
+  // Build member data without undefined values
+  const newMemberData: any = {
     clubId: request.clubId,
     clubName: request.clubName,
     userId: request.userId,
     userName: request.userName,
     userEmail: request.userEmail,
-    userPhone: request.userPhone,
-    userDepartment: request.userDepartment,
-    userYear: request.userYear,
     role: 'Member',
     contribution: '',
     isFeatured: false,
@@ -452,7 +488,19 @@ export const approveJoinRequest = async (
     createdAt: now,
     updatedAt: now,
   };
-  batch.set(newMemberRef, newMember);
+  
+  // Only add optional fields if they exist
+  if (request.userPhone) {
+    newMemberData.userPhone = request.userPhone;
+  }
+  if (request.userDepartment) {
+    newMemberData.userDepartment = request.userDepartment;
+  }
+  if (request.userYear) {
+    newMemberData.userYear = request.userYear;
+  }
+  
+  batch.set(newMemberRef, newMemberData);
 
   // 3. Increment club member count
   const clubRef = doc(db, 'clubs', request.clubId);

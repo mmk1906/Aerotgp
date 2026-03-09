@@ -92,11 +92,11 @@ export function ClubDetail() {
   };
 
   const checkUserStatus = async () => {
-    if (!user || !club) return;
+    if (!user || !club || !club.id) return;
 
     try {
       // Check if member
-      const memberStatus = await isUserClubMember(user.uid, club.id!);
+      const memberStatus = await isUserClubMember(user.id, club.id);
       setIsMember(memberStatus);
 
       if (memberStatus) {
@@ -106,7 +106,7 @@ export function ClubDetail() {
       }
 
       // Get user's requests for this club
-      const requests = await getUserJoinRequests(user.uid);
+      const requests = await getUserJoinRequests(user.id);
       const clubRequest = requests.find(r => r.clubId === club.id && r.status === 'pending');
       setUserRequest(clubRequest || null);
 
@@ -117,11 +117,14 @@ export function ClubDetail() {
       }
 
       // Check if can join
-      const { canJoin: canJoinClub, reason } = await canUserJoinClub(user.uid, club.id!);
+      const { canJoin: canJoinClub, reason } = await canUserJoinClub(user.id, club.id);
       setCanJoin(canJoinClub);
       setCanJoinReason(reason || '');
     } catch (error) {
       console.error('Error checking user status:', error);
+      // Set safe defaults on error
+      setCanJoin(false);
+      setCanJoinReason('Error checking status');
     }
   };
 
@@ -138,7 +141,7 @@ export function ClubDetail() {
       setJoiningClub(true);
 
       // Get user profile
-      const userProfile = await getUserProfile(user.uid);
+      const userProfile = await getUserProfile(user.id);
       if (!userProfile) {
         toast.error('Please complete your profile first to join clubs.', {
           duration: 5000,
@@ -165,7 +168,7 @@ export function ClubDetail() {
       // Submit join request with auto-generated reason
       await submitJoinRequest(
         club.id,
-        user.uid,
+        user.id,
         {
           name: userProfile.name,
           email: userProfile.email,
