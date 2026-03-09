@@ -15,7 +15,8 @@ import {
   Calendar,
   Star,
   ArrowRight,
-  UserMinus
+  UserMinus,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
@@ -36,6 +37,7 @@ export function MyClubs() {
   const [joinRequests, setJoinRequests] = useState<ClubJoinRequest[]>([]);
   const [availableClubs, setAvailableClubs] = useState<Club[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -43,9 +45,13 @@ export function MyClubs() {
     }
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = async (showRefresh = false) => {
     try {
-      setLoading(true);
+      if (showRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       
       // Load user's clubs and requests in parallel
       const [memberships, requests, allClubs] = await Promise.all([
@@ -73,7 +79,13 @@ export function MyClubs() {
       toast.error('Failed to load clubs data');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    loadData(true);
+    toast.success('Refreshed clubs data');
   };
 
   const handleLeaveClub = async (membership: ClubMember) => {
@@ -105,9 +117,21 @@ export function MyClubs() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
       >
-        <h1 className="text-3xl font-bold mb-2">My Clubs</h1>
-        <p className="text-gray-400">Manage your club memberships and join new clubs</p>
+        <div>
+          <h1 className="text-3xl font-bold mb-2">My Clubs</h1>
+          <p className="text-gray-400">Manage your club memberships and discover new clubs</p>
+        </div>
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          variant="outline"
+          size="sm"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </motion.div>
 
       {/* Stats Cards */}
@@ -256,6 +280,7 @@ export function MyClubs() {
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => handleLeaveClub(membership)}
+                                title="Leave Club"
                               >
                                 <UserMinus className="w-4 h-4" />
                               </Button>
@@ -328,6 +353,15 @@ export function MyClubs() {
                                 <p className="text-sm text-red-400">
                                   <span className="font-semibold">Rejection Reason: </span>
                                   {request.rejectionReason}
+                                </p>
+                              </div>
+                            )}
+
+                            {request.status === 'approved' && (
+                              <div className="bg-green-900/20 border border-green-700/50 p-3 rounded-lg mt-3">
+                                <p className="text-sm text-green-400">
+                                  <CheckCircle className="w-4 h-4 inline mr-1" />
+                                  Your request has been approved! You are now a member of this club.
                                 </p>
                               </div>
                             )}

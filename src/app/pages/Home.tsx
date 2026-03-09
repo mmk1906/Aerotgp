@@ -81,7 +81,7 @@ export function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-0">
         <div
           className="absolute inset-0 z-0"
           style={{
@@ -93,33 +93,33 @@ export function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0e1a]/90 via-[#0a0e1a]/80 to-[#0a0e1a]" />
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
           >
             <motion.div
-              className="inline-block mb-6"
+              className="inline-block mb-4 md:mb-6"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Rocket className="w-16 h-16 text-blue-500 mx-auto" />
+              <Rocket className="w-12 h-12 md:w-16 md:h-16 text-blue-500 mx-auto" />
             </motion.div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent px-2">
               Shaping the Future of Flight
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-6 md:mb-8 max-w-3xl mx-auto px-2">
               Excellence in Aeronautical Engineering Education, Research, and Innovation
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/about">
-                <Button size="lg" className="min-w-[150px]">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+              <Link to="/about" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:min-w-[150px]">
                   Explore <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
-              <Link to="/events">
-                <Button size="lg" variant="outline" className="min-w-[150px]">
+              <Link to="/events" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:min-w-[150px]">
                   View Events
                 </Button>
               </Link>
@@ -132,19 +132,19 @@ export function Home() {
       
 
       {/* Highlights Section */}
-      <section className="relative py-20 bg-[#0f172a]">
+      <section className="relative py-12 md:py-20 bg-[#0f172a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
           >
-            <h2 className="text-4xl font-bold mb-4">Department Highlights</h2>
-            <p className="text-gray-400 text-lg">Leading innovation in aerospace technology</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">Department Highlights</h2>
+            <p className="text-gray-400 text-base md:text-lg px-4">Leading innovation in aerospace technology</p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {[
               {
                 title: 'Advanced Research',
@@ -169,18 +169,19 @@ export function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 group">
-                  <div className="relative h-48 overflow-hidden">
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 group h-full">
+                  <div className="relative h-40 sm:h-44 md:h-48 overflow-hidden">
                     <img
                       src={highlight.image}
                       alt={highlight.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
                   </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{highlight.title}</h3>
-                    <p className="text-gray-400">{highlight.description}</p>
+                  <CardContent className="p-4 sm:p-5 md:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">{highlight.title}</h3>
+                    <p className="text-gray-400 text-sm sm:text-base">{highlight.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -190,21 +191,21 @@ export function Home() {
       </section>
 
       {/* Upcoming Events Preview */}
-      <section className="relative py-20 bg-gradient-to-b from-[#0f172a] to-[#0a0e1a]">
+      <section className="relative py-12 md:py-20 bg-gradient-to-b from-[#0f172a] to-[#0a0e1a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 md:mb-12 gap-4">
             <div>
-              <h2 className="text-4xl font-bold mb-4">Upcoming Events</h2>
-              <p className="text-gray-400 text-lg">Join us for exciting learning opportunities</p>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-4">Upcoming Events</h2>
+              <p className="text-gray-400 text-sm sm:text-base md:text-lg">Join us for exciting learning opportunities</p>
             </div>
-            <Link to="/events">
-              <Button variant="outline">
+            <Link to="/events" className="w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto">
                 View All <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {upcomingEvents.map((event, index) => (
               <motion.div
                 key={event.id}
@@ -213,25 +214,26 @@ export function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300">
-                  <div className="relative h-48">
+                <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 h-full">
+                  <div className="relative h-40 sm:h-44 md:h-48">
                     <img
                       src={event.image}
                       alt={event.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                     {event.isPaid && (
-                      <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold">
                         ₹{event.price}
                       </div>
                     )}
                   </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{event.description}</p>
-                    <div className="flex justify-between items-center text-sm text-gray-500">
+                  <CardContent className="p-4 sm:p-5 md:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2">{event.title}</h3>
+                    <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{event.description}</p>
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 text-xs sm:text-sm text-gray-500">
                       <span>{new Date(event.date).toLocaleDateString()}</span>
-                      <span>{event.registeredCount}/{event.maxParticipants} registered</span>
+                      <span className="whitespace-nowrap">{event.registeredCount}/{event.maxParticipants} registered</span>
                     </div>
                   </CardContent>
                 </Card>

@@ -127,6 +127,34 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Improve text rendering on mobile */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent text size adjustment on mobile */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /**
+  * Mobile touch optimizations
+  */
+  @media (max-width: 768px) {
+    /* Increase touch target sizes for buttons and links */
+    button,
+    a,
+    [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Improve scrolling performance */
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Remove tap highlight color */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
   }
 
   /**
@@ -136,6 +164,8 @@
 
   html {
     font-size: var(--font-size);
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
   }
 
   h1 {

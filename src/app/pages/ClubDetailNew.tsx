@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
-import { Textarea } from '../components/ui/textarea';
-import { Label } from '../components/ui/label';
 import {
   Rocket,
   Users,
@@ -28,6 +25,7 @@ import {
   submitJoinRequest,
   canUserJoinClub,
   getUserJoinRequests,
+  isUserClubMember,
   Club,
   ClubMember,
   ClubJoinRequest
@@ -37,21 +35,21 @@ import { getUserProfile } from '../services/authService';
 export function ClubDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [featuredMembers, setFeaturedMembers] = useState<ClubMember[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Join dialog state
-  const [showJoinDialog, setShowJoinDialog] = useState(false);
-  const [joinReason, setJoinReason] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  // Join state
+  const [joiningClub, setJoiningClub] = useState(false);
 
   // User state
   const [canJoin, setCanJoin] = useState(false);
   const [canJoinReason, setCanJoinReason] = useState('');
   const [userRequest, setUserRequest] = useState<ClubJoinRequest | null>(null);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -97,39 +95,47 @@ export function ClubDetail() {
     if (!user || !club) return;
 
     try {
-      // Check if can join
-      const { canJoin: canJoinClub, reason } = await canUserJoinClub(user.uid, club.id!);
-      setCanJoin(canJoinClub);
-      setCanJoinReason(reason || '');
+      // Check if member
+      const memberStatus = await isUserClubMember(user.uid, club.id!);
+      setIsMember(memberStatus);
+
+      if (memberStatus) {
+        setCanJoin(false);
+        setCanJoinReason('Already a member');
+        return;
+      }
 
       // Get user's requests for this club
       const requests = await getUserJoinRequests(user.uid);
       const clubRequest = requests.find(r => r.clubId === club.id && r.status === 'pending');
       setUserRequest(clubRequest || null);
+
+      if (clubRequest) {
+        setCanJoin(false);
+        setCanJoinReason('Request pending');
+        return;
+      }
+
+      // Check if can join
+      const { canJoin: canJoinClub, reason } = await canUserJoinClub(user.uid, club.id!);
+      setCanJoin(canJoinClub);
+      setCanJoinReason(reason || '');
     } catch (error) {
       console.error('Error checking user status:', error);
     }
   };
 
-  const handleJoinClick = () => {
+  const handleQuickJoin = async () => {
     if (!user) {
       toast.error('Please login to join clubs');
+      navigate('/login');
       return;
     }
 
-    setShowJoinDialog(true);
-  };
-
-  const handleSubmitJoinRequest = async () => {
-    if (!user || !club) return;
-
-    if (!joinReason.trim()) {
-      toast.error('Please provide a reason for joining');
-      return;
-    }
+    if (!club || !club.id) return;
 
     try {
-      setSubmitting(true);
+      setJoiningClub(true);
 
       // Get user profile
       const userProfile = await getUserProfile(user.uid);
@@ -138,10 +144,9 @@ export function ClubDetail() {
           duration: 5000,
           action: {
             label: 'Go to Profile',
-            onClick: () => window.location.href = '/portal/profile'
+            onClick: () => navigate('/portal/profile')
           }
         });
-        setShowJoinDialog(false);
         return;
       }
 
@@ -150,16 +155,16 @@ export function ClubDetail() {
         toast.error('Please complete your profile with name and email before joining clubs.', {
           duration: 5000,
           action: {
-            label: 'Go to Profile',
-            onClick: () => window.location.href = '/portal/profile'
+            label: 'Complete Profile',
+            onClick: () => navigate('/portal/profile')
           }
         });
-        setShowJoinDialog(false);
         return;
       }
 
+      // Submit join request with auto-generated reason
       await submitJoinRequest(
-        club.id!,
+        club.id,
         user.uid,
         {
           name: userProfile.name,
@@ -168,18 +173,16 @@ export function ClubDetail() {
           department: userProfile.department,
           year: userProfile.year,
         },
-        joinReason
+        `I am interested in joining ${club.name} to participate in club activities and contribute to the aerospace community.`
       );
 
-      toast.success('Join request submitted successfully! Wait for admin approval.');
-      setShowJoinDialog(false);
-      setJoinReason('');
+      toast.success(`Join request sent for ${club.name}! Wait for admin approval.`);
       await checkUserStatus();
     } catch (error: any) {
-      console.error('Error submitting join request:', error);
+      console.error('Error joining club:', error);
       toast.error(error.message || 'Failed to submit join request');
     } finally {
-      setSubmitting(false);
+      setJoiningClub(false);
     }
   };
 
@@ -308,15 +311,33 @@ export function ClubDetail() {
                 {/* Join Button */}
                 <div className="flex-shrink-0">
                   {user ? (
-                    userRequest ? (
-                      <Button disabled className="w-full md:w-auto">
+                    isMember ? (
+                      <Button disabled className="w-full md:w-auto bg-green-600">
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Joined
+                      </Button>
+                    ) : userRequest ? (
+                      <Button disabled className="w-full md:w-auto bg-yellow-600">
                         <Clock className="w-4 h-4 mr-2" />
                         Request Pending
                       </Button>
                     ) : canJoin ? (
-                      <Button onClick={handleJoinClick} className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto">
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Join Club
+                      <Button 
+                        onClick={handleQuickJoin} 
+                        className="bg-blue-600 hover:bg-blue-700 w-full md:w-auto"
+                        disabled={joiningClub}
+                      >
+                        {joiningClub ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Joining...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Join Club
+                          </>
+                        )}
                       </Button>
                     ) : (
                       <Button disabled className="w-full md:w-auto">
@@ -447,58 +468,6 @@ export function ClubDetail() {
           </Card>
         </motion.div>
       </div>
-
-      {/* Join Dialog */}
-      <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
-        <DialogContent className="bg-slate-900 border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Join {club.name}</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Tell us why you want to join this club. Your request will be reviewed by the admin.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 mt-4">
-            <div>
-              <Label>Why do you want to join?</Label>
-              <Textarea
-                value={joinReason}
-                onChange={(e) => setJoinReason(e.target.value)}
-                rows={5}
-                placeholder="Share your interest, experience, and what you hope to achieve..."
-                className="bg-slate-800 border-slate-700 mt-2"
-              />
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowJoinDialog(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmitJoinRequest}
-                disabled={submitting || !joinReason.trim()}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Submit Request
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { Starfield } from './Starfield';
 import { ScrollToTop } from './ScrollToTop';
 
 export function PortalLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed on mobile
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -51,7 +51,7 @@ export function PortalLayout() {
       {/* Top Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[#0a0e1a]/95 backdrop-blur-lg border-b border-gray-800">
         <div className="flex items-center justify-between h-16 px-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 rounded-lg hover:bg-gray-800 transition-colors lg:hidden"
@@ -59,21 +59,21 @@ export function PortalLayout() {
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
             <Link to="/" className="flex items-center space-x-2">
-              <Plane className="w-6 h-6 text-blue-500" />
-              <span className="text-lg font-bold">AeroTGP Portal</span>
+              <Plane className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+              <span className="text-base sm:text-lg font-bold">AeroTGP <span className="hidden sm:inline">Portal</span></span>
             </Link>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Link to="/">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+            <Link to="/" className="hidden sm:block">
               <Button variant="ghost" size="sm">
                 <BookOpen className="w-4 h-4 mr-2" />
-                Public Site
+                <span className="hidden md:inline">Public Site</span>
               </Button>
             </Link>
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 rounded-lg">
-              <User className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium">{user.name}</span>
+            <div className="flex items-center space-x-2 px-2 sm:px-3 py-2 bg-gray-800/50 rounded-lg">
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+              <span className="text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-none">{user.name}</span>
             </div>
           </div>
         </div>
@@ -98,6 +98,7 @@ export function PortalLayout() {
                 <Link
                   key={link.path}
                   to={link.path}
+                  onClick={() => setSidebarOpen(false)} // Close sidebar on mobile after clicking
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'

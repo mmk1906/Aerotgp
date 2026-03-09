@@ -101,19 +101,19 @@ export function Login() {
 
   return (
     <div className="min-h-screen pt-24 pb-20 flex items-center justify-center">
-      <div className="max-w-md w-full mx-auto px-4">
+      <div className="max-w-md w-full mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <Plane className="w-12 h-12 text-blue-500" />
+          <div className="flex items-center justify-center space-x-2 mb-3 sm:mb-4">
+            <Plane className="w-10 h-10 sm:w-12 sm:h-12 text-blue-500" />
           </div>
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
             Welcome Back
           </h1>
-          <p className="text-gray-400">Sign in to access your account</p>
+          <p className="text-sm sm:text-base text-gray-400">Sign in to access your account</p>
         </motion.div>
 
         <motion.div
@@ -122,12 +122,12 @@ export function Login() {
           transition={{ delay: 0.1 }}
         >
           <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               {!showForgotPassword ? (
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="register">Register</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+                    <TabsTrigger value="login" className="text-sm sm:text-base">Login</TabsTrigger>
+                    <TabsTrigger value="register" className="text-sm sm:text-base">Register</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="login">

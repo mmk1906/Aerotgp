@@ -216,21 +216,21 @@ export function Events() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-            Events
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent">
+            Events & Workshops
           </h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-base sm:text-lg md:text-xl text-gray-400 px-4">
             Participate in workshops, seminars, and competitions
           </p>
         </motion.div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 mb-8 md:mb-12 px-2">
           {['all', 'upcoming', 'completed'].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-6 py-2 rounded-full transition-all capitalize ${
+              className={`px-4 sm:px-5 md:px-6 py-2 rounded-full transition-all capitalize text-sm sm:text-base ${
                 filter === f
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-gray-400 hover:bg-slate-700'
@@ -247,7 +247,7 @@ export function Events() {
         ) : filteredEvents.length === 0 ? (
           <div className="text-center text-gray-400 py-12">No events found</div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {filteredEvents.map((event, index) => (
               <motion.div
                 key={event.id}
@@ -256,7 +256,7 @@ export function Events() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700 overflow-hidden hover:border-blue-500 transition-all duration-300 h-full flex flex-col">
-                  <div className="relative h-48">
+                  <div className="relative h-40 sm:h-44 md:h-48">
                     <img
                       src={
                         event.bannerImage || event.imageUrl || event.image || 
@@ -264,59 +264,60 @@ export function Events() {
                       }
                       alt={event.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
                       <Badge
                         className={
                           event.status === 'upcoming'
-                            ? 'bg-green-600'
+                            ? 'bg-green-600 text-xs sm:text-sm'
                             : event.status === 'ongoing'
-                            ? 'bg-yellow-600'
-                            : 'bg-gray-600'
+                            ? 'bg-yellow-600 text-xs sm:text-sm'
+                            : 'bg-gray-600 text-xs sm:text-sm'
                         }
                       >
                         {event.status}
                       </Badge>
                     </div>
                     {event.isPaid && (
-                      <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-blue-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold">
                         ₹{event.price}
                       </div>
                     )}
                   </div>
-                  <CardContent className="p-6 flex-1 flex flex-col">
-                    <h3 className="text-xl font-semibold mb-3">{event.title}</h3>
-                    <p className="text-gray-400 text-sm mb-4 flex-1 line-clamp-3">{event.description}</p>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
-                        <Calendar className="w-4 h-4 text-blue-500" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        {event.time && <span className="ml-2">• {event.time}</span>}
+                  <CardContent className="p-4 sm:p-5 md:p-6 flex-1 flex flex-col">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">{event.title}</h3>
+                    <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4 flex-1 line-clamp-3">{event.description}</p>
+                    <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                        <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+                        <span className="truncate">{new Date(event.date).toLocaleDateString()}</span>
+                        {event.time && <span className="ml-2 hidden sm:inline">• {event.time}</span>}
                       </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
-                        <MapPin className="w-4 h-4 text-blue-500" />
-                        <span>{event.venue}</span>
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+                        <span className="truncate">{event.venue}</span>
                       </div>
                       {event.coordinatorName && (
-                        <div className="flex items-center space-x-2 text-sm text-gray-400">
-                          <User className="w-4 h-4 text-blue-500" />
-                          <span>{event.coordinatorName}</span>
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                          <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+                          <span className="truncate">{event.coordinatorName}</span>
                         </div>
                       )}
                       {event.coordinatorContact && (
-                        <div className="flex items-center space-x-2 text-sm text-gray-400">
-                          <Phone className="w-4 h-4 text-blue-500" />
-                          <span>{event.coordinatorContact}</span>
+                        <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                          <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
+                          <span className="truncate">{event.coordinatorContact}</span>
                         </div>
                       )}
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
-                        <Users className="w-4 h-4 text-blue-500" />
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
                         <span>
                           {event.registeredCount || 0}/{event.maxParticipants} registered
                         </span>
                       </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-400">
-                        <Clock className="w-4 h-4 text-blue-500" />
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-400">
+                        <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0" />
                         <span>
                           Deadline: {new Date(event.registrationDeadline).toLocaleDateString()}
                         </span>
