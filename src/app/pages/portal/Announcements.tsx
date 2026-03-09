@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { useLocation } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -16,9 +17,9 @@ import {
 } from 'lucide-react';
 
 export function PortalAnnouncements() {
+  const location = useLocation();
   const [filter, setFilter] = useState('all');
-
-  const announcements = [
+  const [announcements, setAnnouncements] = useState([
     {
       id: 1,
       title: 'Mid-Term Examination Schedule Released',
@@ -107,7 +108,22 @@ export function PortalAnnouncements() {
       read: true,
       author: 'Accounts Section',
     },
-  ];
+  ]);
+
+  // Reset filter when navigating to this page
+  useEffect(() => {
+    setFilter('all');
+    // Scroll to top when page loads
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  const markAsRead = (id: number) => {
+    setAnnouncements(prev => 
+      prev.map(ann => 
+        ann.id === id ? { ...ann, read: true } : ann
+      )
+    );
+  };
 
   const getTypeConfig = (type: string) => {
     switch (type) {
@@ -306,7 +322,7 @@ export function PortalAnnouncements() {
                         </div>
 
                         {!announcement.read && (
-                          <Button size="sm" variant="ghost">
+                          <Button size="sm" variant="ghost" onClick={() => markAsRead(announcement.id)}>
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Mark as Read
                           </Button>

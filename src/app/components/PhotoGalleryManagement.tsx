@@ -139,7 +139,8 @@ export function PhotoGalleryManagement() {
       setUploading(true);
 
       // Upload image to Cloudinary
-      const imageUrl = await uploadToCloudinary(imageFile, 'gallery');
+      const uploadResult = await uploadToCloudinary(imageFile, 'gallery');
+      const imageUrl = uploadResult.secure_url; // Extract the URL string from the result
 
       // Create gallery item with auto-approved status for admin
       await createGalleryPhoto({

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
 import { 
@@ -25,6 +25,13 @@ export function PortalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [location.pathname]);
 
   const portalLinks = [
     { name: 'Dashboard', path: '/portal', icon: LayoutDashboard },
@@ -100,12 +107,6 @@ export function PortalLayout() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  onClick={() => {
-                    // Close sidebar on mobile after clicking
-                    if (window.innerWidth < 1024) {
-                      setSidebarOpen(false);
-                    }
-                  }}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
@@ -137,7 +138,10 @@ export function PortalLayout() {
           }`}
         >
           <div className="min-h-[calc(100vh-4rem)] p-4 md:p-8">
-            <Outlet />
+            {/* Key prop ensures component remounts on route change for proper sync */}
+            <div key={location.pathname}>
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

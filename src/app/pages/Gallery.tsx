@@ -135,7 +135,8 @@ export function Gallery() {
       setUploading(true);
 
       // Upload image to Cloudinary
-      const imageUrl = await uploadToCloudinary(imageFile, 'gallery');
+      const uploadResult = await uploadToCloudinary(imageFile, 'gallery');
+      const imageUrl = uploadResult.secure_url; // Extract the URL string from the result
 
       // Determine status based on user role
       const status = user?.role === 'admin' ? 'approved' : 'pending';
@@ -253,6 +254,11 @@ export function Gallery() {
                       src={photo.imageUrl}
                       alt={photo.caption}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23334155" width="400" height="400"/%3E%3Ctext fill="%23cbd5e1" font-family="sans-serif" font-size="48" x="50%25" y="50%25" text-anchor="middle" dominant-baseline="middle"%3EImage Not Found%3C/text%3E%3C/svg%3E';
+                        target.onerror = null; // Prevent infinite loop
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -419,6 +425,12 @@ export function Gallery() {
       {/* Image Preview Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
         <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Photo Details</DialogTitle>
+            <DialogDescription>
+              View the full-size photo and details
+            </DialogDescription>
+          </DialogHeader>
           {selectedImage && (
             <div className="space-y-4">
               <img

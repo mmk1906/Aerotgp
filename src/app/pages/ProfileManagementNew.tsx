@@ -21,7 +21,7 @@ interface ExtendedUserProfile extends AuthUserProfile {
 }
 
 export function ProfileManagement() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -122,6 +122,7 @@ export function ProfileManagement() {
     try {
       setSaving(true);
 
+      // Update in Firebase
       await updateUserProfile(user!.id, {
         name: profile.name,
         phone: profile.phone,
@@ -133,6 +134,16 @@ export function ProfileManagement() {
         skills: profile.skills,
         interests: profile.interests,
       } as any);
+
+      // Update the AuthContext immediately so changes reflect across the portal
+      await updateUser({
+        name: profile.name,
+        phone: profile.phone,
+        department: profile.department,
+        year: profile.year,
+        prn: profile.prn,
+        profilePhoto: profile.profilePhoto,
+      });
 
       toast.success('Profile updated successfully!');
       setIsEditing(false);

@@ -155,10 +155,9 @@ export function Events() {
         setUploadingReceipt(false);
       }
 
-      // Create registration
-      await createEventRegistration({
+      // Create registration object with only defined values
+      const registrationData: any = {
         eventId: selectedEvent.id!,
-        userId: user?.id,
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
@@ -167,14 +166,32 @@ export function Events() {
         collegeName: formData.collegeName,
         city: formData.city,
         isInternalStudent: formData.isInternalStudent === 'yes',
-        teamName: formData.teamName || undefined,
-        numberOfParticipants: formData.numberOfParticipants || 1,
-        transactionId: selectedEvent.isPaid ? formData.transactionId : undefined,
-        paymentReceiptUrl: selectedEvent.isPaid ? receiptUrl : undefined,
         status: 'pending',
-        paymentStatus: selectedEvent.isPaid ? 'pending' : undefined,
         registrationDate: new Date().toISOString(),
-      });
+      };
+
+      // Add optional fields only if they have values
+      if (user?.id) {
+        registrationData.userId = user.id;
+      }
+      if (formData.teamName && formData.teamName.trim() !== '') {
+        registrationData.teamName = formData.teamName;
+      }
+      if (formData.numberOfParticipants && formData.numberOfParticipants > 0) {
+        registrationData.numberOfParticipants = formData.numberOfParticipants;
+      }
+      if (selectedEvent.isPaid) {
+        if (formData.transactionId && formData.transactionId.trim() !== '') {
+          registrationData.transactionId = formData.transactionId;
+        }
+        if (receiptUrl && receiptUrl.trim() !== '') {
+          registrationData.paymentReceiptUrl = receiptUrl;
+        }
+        registrationData.paymentStatus = 'pending';
+      }
+
+      // Create registration
+      await createEventRegistration(registrationData);
 
       toast.success('Registration submitted successfully! Awaiting admin approval.');
       

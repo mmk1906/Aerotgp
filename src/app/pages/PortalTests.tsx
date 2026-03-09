@@ -4,21 +4,35 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'react-router';
 import { GraduationCap, Clock, Award, TrendingUp, Play, Trophy } from 'lucide-react';
 import { MCQTest, Quiz } from '../components/MCQTest';
 import { mockQuizzes } from '../data/quizData';
 
 export function PortalTests() {
   const { user } = useAuth();
+  const location = useLocation();
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
   const [testAttempts, setTestAttempts] = useState<any[]>([]);
   const [quizzes] = useState<Quiz[]>(mockQuizzes);
 
+  // Reset state when navigating to this page
   useEffect(() => {
+    setSelectedQuiz(null);
+    loadTestAttempts();
+  }, [location.pathname]);
+
+  const loadTestAttempts = () => {
     // Load test attempts from localStorage
     const attempts = JSON.parse(localStorage.getItem('testAttempts') || '[]');
     const userAttempts = attempts.filter((a: any) => a.userId === user?.id);
     setTestAttempts(userAttempts);
+  };
+
+  useEffect(() => {
+    if (user) {
+      loadTestAttempts();
+    }
   }, [user]);
 
   const getQuizAttempts = (quizId: string) => {

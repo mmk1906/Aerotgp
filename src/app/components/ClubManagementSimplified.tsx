@@ -536,6 +536,9 @@ export function ClubManagementSimplified() {
         <DialogContent className="bg-slate-900 border-slate-700 max-w-2xl">
           <DialogHeader>
             <DialogTitle>Application Details</DialogTitle>
+            <DialogDescription>
+              Review the club membership application information below.
+            </DialogDescription>
           </DialogHeader>
           {selectedApplication && (
             <div className="space-y-4">

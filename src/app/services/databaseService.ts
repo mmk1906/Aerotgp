@@ -24,16 +24,24 @@ export const createDocument = async <T extends Record<string, any>>(
   docId?: string
 ): Promise<string> => {
   try {
+    // Filter out undefined values to prevent Firebase errors
+    const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
     if (docId) {
       await setDoc(doc(db, collectionName, docId), {
-        ...data,
+        ...cleanData,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
       return docId;
     } else {
       const docRef = await addDoc(collection(db, collectionName), {
-        ...data,
+        ...cleanData,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -70,9 +78,17 @@ export const updateDocument = async <T extends Record<string, any>>(
   data: Partial<T>
 ): Promise<void> => {
   try {
+    // Filter out undefined values to prevent Firebase errors
+    const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+      if (value !== undefined) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
     const docRef = doc(db, collectionName, docId);
     await updateDoc(docRef, {
-      ...data,
+      ...cleanData,
       updatedAt: Timestamp.now(),
     });
   } catch (error: any) {

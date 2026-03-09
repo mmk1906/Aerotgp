@@ -452,6 +452,9 @@ export function FacultyManagement() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
           <DialogHeader>
             <DialogTitle>Edit Faculty Member</DialogTitle>
+            <DialogDescription>
+              Update the faculty member information below.
+            </DialogDescription>
           </DialogHeader>
 
           {selectedFaculty && (
