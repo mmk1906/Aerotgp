@@ -175,6 +175,7 @@ export function ClubDetail() {
           phone: userProfile.phone,
           department: userProfile.department,
           year: userProfile.year,
+          profilePhoto: userProfile.profilePhoto,
         },
         `I am interested in joining ${club.name} to participate in club activities and contribute to the aerospace community.`
       );

@@ -13,116 +13,81 @@ import {
   Megaphone,
   CheckCircle,
   Clock,
-  Filter
+  Filter,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { Announcement } from '../../services/databaseService';
 
 export function PortalAnnouncements() {
   const location = useLocation();
   const [filter, setFilter] = useState('all');
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: 1,
-      title: 'Mid-Term Examination Schedule Released',
-      content: 'The mid-term examination schedule for all courses has been published. Please check your course pages for detailed timings and venues. Examinations will begin from March 15, 2026.',
-      type: 'important',
-      date: '2026-03-09',
-      time: '10:30 AM',
-      pinned: true,
-      read: false,
-      author: 'Academic Office',
-    },
-    {
-      id: 2,
-      title: 'Guest Lecture on Advanced Propulsion Systems',
-      content: 'Dr. Robert Martinez from NASA will be delivering a guest lecture on "Future of Space Propulsion" on March 12, 2026, at 2:00 PM in the Main Auditorium. All students are encouraged to attend.',
-      type: 'event',
-      date: '2026-03-08',
-      time: '3:45 PM',
-      pinned: true,
-      read: false,
-      author: 'Department of Aeronautical Engineering',
-    },
-    {
-      id: 3,
-      title: 'Library Hours Extended During Exam Week',
-      content: 'The central library will be open 24/7 during the examination week (March 15-22, 2026). Additional study spaces have been arranged in Room 301 and 302.',
-      type: 'info',
-      date: '2026-03-08',
-      time: '11:20 AM',
-      pinned: false,
-      read: true,
-      author: 'Library Administration',
-    },
-    {
-      id: 4,
-      title: 'Project Submission Deadline Reminder',
-      content: 'This is a reminder that the final project submissions for AE301 and AE302 are due on March 25, 2026. Late submissions will incur a penalty as per the course policy.',
-      type: 'deadline',
-      date: '2026-03-07',
-      time: '9:15 AM',
-      pinned: false,
-      read: true,
-      author: 'Course Coordinator',
-    },
-    {
-      id: 5,
-      title: 'New Research Lab Inauguration',
-      content: 'The new Computational Fluid Dynamics Lab will be inaugurated on March 14, 2026, at 11:00 AM. The lab is equipped with high-performance computing systems and advanced simulation software.',
-      type: 'event',
-      date: '2026-03-06',
-      time: '2:30 PM',
-      pinned: false,
-      read: true,
-      author: 'Department Head',
-    },
-    {
-      id: 6,
-      title: 'Campus Internet Maintenance Notice',
-      content: 'Scheduled maintenance on the campus network will take place on March 11, 2026, from 2:00 AM to 6:00 AM. Internet services may be temporarily unavailable during this period.',
-      type: 'info',
-      date: '2026-03-05',
-      time: '4:50 PM',
-      pinned: false,
-      read: true,
-      author: 'IT Services',
-    },
-    {
-      id: 7,
-      title: 'Student Chapter Meeting - AIAA',
-      content: 'The AIAA Student Chapter will hold its monthly meeting on March 13, 2026, at 4:00 PM in Room 205. Agenda includes discussion on upcoming design competitions and workshop planning.',
-      type: 'event',
-      date: '2026-03-05',
-      time: '1:15 PM',
-      pinned: false,
-      read: true,
-      author: 'AIAA Student Chapter',
-    },
-    {
-      id: 8,
-      title: 'Fee Payment Reminder',
-      content: 'Students who have not yet cleared their semester fees are requested to do so by March 20, 2026. Failure to pay fees may result in restricted access to examination halls.',
-      type: 'important',
-      date: '2026-03-04',
-      time: '10:00 AM',
-      pinned: false,
-      read: true,
-      author: 'Accounts Section',
-    },
-  ]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [readAnnouncements, setReadAnnouncements] = useState<Set<string>>(
+    new Set(JSON.parse(localStorage.getItem('readAnnouncements') || '[]'))
+  );
+
+  useEffect(() => {
+    // Set up real-time listener for announcements
+    const q = query(collection(db, 'announcements'), orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Announcement[];
+        
+        // Sort: pinned first, then by date
+        const sorted = data.sort((a, b) => {
+          if (a.pinned && !b.pinned) return -1;
+          if (!a.pinned && b.pinned) return 1;
+          
+          const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+          const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        
+        setAnnouncements(sorted);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error loading announcements:', error);
+        toast.error('Failed to load announcements');
+        setLoading(false);
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
 
   // Reset filter when navigating to this page
   useEffect(() => {
     setFilter('all');
-    // Scroll to top when page loads
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
-  const markAsRead = (id: number) => {
-    setAnnouncements(prev => 
-      prev.map(ann => 
-        ann.id === id ? { ...ann, read: true } : ann
-      )
-    );
+  const markAsRead = (id: string) => {
+    const newReadSet = new Set(readAnnouncements);
+    newReadSet.add(id);
+    setReadAnnouncements(newReadSet);
+    localStorage.setItem('readAnnouncements', JSON.stringify(Array.from(newReadSet)));
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // The real-time listener will automatically update the data
+    setTimeout(() => {
+      setRefreshing(false);
+      toast.success('Announcements refreshed');
+    }, 500);
   };
 
   const getTypeConfig = (type: string) => {
@@ -174,7 +139,15 @@ export function PortalAnnouncements() {
     ? announcements 
     : announcements.filter(a => a.type === filter);
 
-  const unreadCount = announcements.filter(a => !a.read).length;
+  const unreadCount = announcements.filter(a => !readAnnouncements.has(a.id)).length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -198,6 +171,18 @@ export function PortalAnnouncements() {
               Stay updated with the latest news and announcements
             </p>
           </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </motion.div>
 
@@ -268,7 +253,7 @@ export function PortalAnnouncements() {
                 className={`bg-gray-900/50 border-gray-800 backdrop-blur-sm hover:border-blue-500/50 transition-all ${
                   announcement.pinned ? 'border-yellow-500/30' : ''
                 } ${
-                  !announcement.read ? 'border-l-4 border-l-blue-500' : ''
+                  !readAnnouncements.has(announcement.id) ? 'border-l-4 border-l-blue-500' : ''
                 }`}
               >
                 <CardContent className="p-6">
@@ -286,7 +271,7 @@ export function PortalAnnouncements() {
                             <Pin className="w-4 h-4 text-yellow-500" />
                           )}
                           <h3 className="text-lg font-semibold">{announcement.title}</h3>
-                          {!announcement.read && (
+                          {!readAnnouncements.has(announcement.id) && (
                             <Badge variant="default" className="bg-blue-500">
                               New
                             </Badge>
@@ -309,19 +294,35 @@ export function PortalAnnouncements() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {new Date(announcement.date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
+                            {announcement.createdAt?.toDate ? 
+                              announcement.createdAt.toDate().toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              }) :
+                              new Date(announcement.createdAt || Date.now()).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            }
                           </span>
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {announcement.time}
+                            {announcement.createdAt?.toDate ? 
+                              announcement.createdAt.toDate().toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) :
+                              new Date(announcement.createdAt || Date.now()).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            }
                           </span>
                         </div>
 
-                        {!announcement.read && (
+                        {!readAnnouncements.has(announcement.id) && (
                           <Button size="sm" variant="ghost" onClick={() => markAsRead(announcement.id)}>
                             <CheckCircle className="w-4 h-4 mr-2" />
                             Mark as Read

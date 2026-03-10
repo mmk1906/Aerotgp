@@ -13,7 +13,8 @@ import {
   X,
   BookOpen,
   Users,
-  Bell
+  Bell,
+  Activity
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,7 @@ export function PortalLayout() {
     { name: 'My Clubs', path: '/portal/my-clubs', icon: Users },
     { name: 'MCQ Tests', path: '/portal/tests', icon: GraduationCap },
     { name: 'Announcements', path: '/portal/announcements', icon: Bell },
+    { name: 'Activity History', path: '/portal/activity-history', icon: Activity },
   ];
 
   const handleLogout = () => {

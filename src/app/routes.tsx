@@ -19,7 +19,9 @@ import { ProfileManagement } from './pages/ProfileManagementNew';
 import { MyEvents } from './pages/MyEvents';
 import { PortalTests } from './pages/PortalTests';
 import { MyClubs } from './pages/portal/MyClubs';
+import { MyClubsEnhanced } from './pages/portal/MyClubsEnhanced';
 import { PortalAnnouncements } from './pages/portal/Announcements';
+import { ActivityHistory } from './pages/portal/ActivityHistory';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import React from 'react';
 
@@ -72,9 +74,10 @@ export const router = createBrowserRouter([
           { index: true, element: <StudentDashboard /> },
           { path: 'profile', element: <ProfileManagement /> },
           { path: 'my-events', element: <MyEvents /> },
-          { path: 'my-clubs', element: <MyClubs /> },
+          { path: 'my-clubs', element: <MyClubsEnhanced /> },
           { path: 'tests', element: <PortalTests /> },
           { path: 'announcements', element: <PortalAnnouncements /> },
+          { path: 'activity-history', element: <ActivityHistory /> },
         ],
       },
     ],

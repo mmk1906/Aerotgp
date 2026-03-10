@@ -15,7 +15,6 @@ import {
   Calendar,
   Star,
   ArrowRight,
-  UserMinus,
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,7 +23,6 @@ import {
   getUserClubMemberships,
   getUserJoinRequests,
   getActiveClubs,
-  removeMember,
   ClubMember,
   ClubJoinRequest,
   Club
@@ -86,21 +84,6 @@ export function MyClubs() {
   const handleRefresh = () => {
     loadData(true);
     toast.success('Refreshed clubs data');
-  };
-
-  const handleLeaveClub = async (membership: ClubMember) => {
-    if (!confirm(`Are you sure you want to leave ${membership.clubName}?`)) {
-      return;
-    }
-
-    try {
-      await removeMember(membership.id!);
-      toast.success(`You have left ${membership.clubName}`);
-      await loadData();
-    } catch (error) {
-      console.error('Error leaving club:', error);
-      toast.error('Failed to leave club');
-    }
   };
 
   if (loading) {
@@ -269,22 +252,12 @@ export function MyClubs() {
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
-                              <Link to={`/clubs/${membership.clubId}`} className="flex-1">
-                                <Button variant="outline" className="w-full">
-                                  <ArrowRight className="w-4 h-4 mr-2" />
-                                  View Club
-                                </Button>
-                              </Link>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleLeaveClub(membership)}
-                                title="Leave Club"
-                              >
-                                <UserMinus className="w-4 h-4" />
+                            <Link to={`/clubs/${membership.clubId}`} className="w-full">
+                              <Button variant="outline" className="w-full">
+                                <ArrowRight className="w-4 h-4 mr-2" />
+                                View Club
                               </Button>
-                            </div>
+                            </Link>
                           </CardContent>
                         </Card>
                       </motion.div>

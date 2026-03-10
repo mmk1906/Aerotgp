@@ -13,7 +13,8 @@ import {
   Clock,
   CheckCircle,
   Bell,
-  Rocket
+  Rocket,
+  Users
 } from 'lucide-react';
 import { 
   getCollection, 
@@ -21,6 +22,11 @@ import {
   EventRegistration,
   Event
 } from '../services/databaseService';
+import {
+  getUserClubMemberships,
+  ClubMember
+} from '../services/clubService';
+import { getUserProfile, UserProfile } from '../services/authService';
 
 export function StudentDashboard() {
   const { user } = useAuth();
@@ -29,6 +35,8 @@ export function StudentDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clubMemberships, setClubMemberships] = useState<ClubMember[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -79,6 +87,14 @@ export function StudentDashboard() {
       }
 
       setNotifications(newNotifications);
+
+      // Load club memberships
+      const memberships = await getUserClubMemberships(user?.id);
+      setClubMemberships(memberships);
+
+      // Load user profile
+      const profile = await getUserProfile(user?.id);
+      setUserProfile(profile);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -93,6 +109,13 @@ export function StudentDashboard() {
       icon: Calendar,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
+    },
+    {
+      title: 'Clubs Joined',
+      value: clubMemberships.length,
+      icon: Users,
+      color: 'text-green-500',
+      bgColor: 'bg-green-500/10',
     },
     {
       title: 'Tests Completed',
@@ -290,6 +313,17 @@ export function StudentDashboard() {
                     <p className="font-semibold">Take a Test</p>
                     <p className="text-xs text-gray-400 mt-1">
                       Test your aerospace knowledge
+                    </p>
+                  </div>
+                </Button>
+              </Link>
+              <Link to="/portal/my-clubs">
+                <Button variant="outline" className="w-full h-full py-6 justify-start">
+                  <div className="text-left">
+                    <Users className="w-6 h-6 mb-2 text-green-400" />
+                    <p className="font-semibold">Join Clubs</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Explore and join student clubs
                     </p>
                   </div>
                 </Button>

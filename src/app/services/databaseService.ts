@@ -208,6 +208,66 @@ export const getUserRegistrations = (userId: string) =>
 export const getEventRegistrations = (eventId: string) => 
   getCollection<EventRegistration>('registrations', [where('eventId', '==', eventId)]);
 
+// Announcements operations
+export interface Announcement {
+  id?: string;
+  title: string;
+  content: string;
+  type: 'important' | 'event' | 'info' | 'deadline' | 'general';
+  pinned: boolean;
+  author: string;
+  targetAudience?: 'all' | 'students' | 'faculty';
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export const createAnnouncement = (data: Announcement) => createDocument('announcements', data);
+export const getAnnouncement = (announcementId: string) => getDocument<Announcement>('announcements', announcementId);
+export const updateAnnouncement = (announcementId: string, data: Partial<Announcement>) => 
+  updateDocument('announcements', announcementId, data);
+export const deleteAnnouncement = (announcementId: string) => deleteDocument('announcements', announcementId);
+export const getAllAnnouncements = () => getCollection<Announcement>('announcements');
+
+// Activity Log operations
+export interface ActivityLog {
+  id?: string;
+  userId: string;
+  type: 'event_registration' | 'club_join' | 'quiz_attempt' | 'profile_update' | 'certificate_download';
+  action: string;
+  details: string;
+  metadata?: Record<string, any>;
+  createdAt?: any;
+}
+
+export const createActivityLog = (data: ActivityLog) => createDocument('activityLogs', data);
+export const getUserActivityLogs = (userId: string) => 
+  getCollection<ActivityLog>('activityLogs', [
+    where('userId', '==', userId),
+    orderBy('createdAt', 'desc'),
+    limit(50)
+  ]);
+
+// Event Certificates operations
+export interface EventCertificate {
+  id?: string;
+  userId: string;
+  eventId: string;
+  registrationId: string;
+  studentName: string;
+  eventName: string;
+  eventDate: string;
+  certificateNumber: string;
+  issuedDate: string;
+  certificateUrl?: string;
+  createdAt?: any;
+}
+
+export const createCertificate = (data: EventCertificate) => createDocument('certificates', data);
+export const getUserCertificates = (userId: string) => 
+  getCollection<EventCertificate>('certificates', [where('userId', '==', userId)]);
+export const getCertificateByRegistration = (registrationId: string) => 
+  getCollection<EventCertificate>('certificates', [where('registrationId', '==', registrationId)]);
+
 // Gallery operations
 export interface GalleryItem {
   id?: string;
@@ -462,7 +522,7 @@ export interface Faculty {
   id?: string;
   name: string;
   designation: string;
-  role?: 'HOD' | 'Professor' | 'Associate Professor' | 'Assistant Professor' | 'Other'; // Role-based hierarchy
+  role?: 'HOD' | 'Professor' | 'Associate Professor' | 'Assistant Professor' | 'Non-Teaching Staff' | 'Jr. Clerk' | 'Other'; // Role-based hierarchy
   qualification: string;
   specialization: string;
   email: string;
@@ -472,6 +532,7 @@ export interface Faculty {
   experience?: string;
   researchInterests?: string[];
   publications?: string[];
+  isTeachingStaff?: boolean; // true for teaching faculty, false for non-teaching
   createdAt?: any;
   updatedAt?: any;
 }

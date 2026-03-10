@@ -11,7 +11,7 @@ export function Faculty() {
   const [faculty, setFaculty] = useState<FacultyType[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const filters = ['all', 'HOD', 'Professor', 'Associate Professor', 'Assistant Professor'];
+  const filters = ['all', 'HOD', 'Professor', 'Associate Professor', 'Assistant Professor', 'Non-Teaching Staff', 'Jr. Clerk'];
 
   useEffect(() => {
     loadFaculty();
@@ -22,13 +22,15 @@ export function Faculty() {
       setLoading(true);
       const fetchedFaculty = await getAllFaculty();
       
-      // Sort faculty by role hierarchy
-      const roleOrder = {
+      // Sort faculty by role hierarchy - Non-teaching and Jr. Clerk always at the end
+      const roleOrder: Record<string, number> = {
         'HOD': 0,
         'Professor': 1,
         'Associate Professor': 2,
         'Assistant Professor': 3,
-        'Other': 4
+        'Other': 4,
+        'Non-Teaching Staff': 5,
+        'Jr. Clerk': 6
       };
       
       const sortedFaculty = fetchedFaculty.sort((a, b) => {

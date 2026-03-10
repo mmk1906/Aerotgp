@@ -76,6 +76,7 @@ export interface ClubJoinRequest {
   userName: string;
   userEmail: string;
   userPhone?: string;
+  userPhoto?: string;
   userDepartment?: string;
   userYear?: string;
   // Request details
@@ -393,6 +394,7 @@ export const submitJoinRequest = async (
     phone?: string;
     department?: string;
     year?: string;
+    profilePhoto?: string;
   },
   reason: string
 ): Promise<string> => {
@@ -432,6 +434,9 @@ export const submitJoinRequest = async (
   }
   if (userProfile.year) {
     requestData.userYear = userProfile.year;
+  }
+  if (userProfile.profilePhoto) {
+    requestData.userPhoto = userProfile.profilePhoto;
   }
 
   const docRef = await addDoc(requestsRef, requestData);
@@ -498,6 +503,9 @@ export const approveJoinRequest = async (
   }
   if (request.userYear) {
     newMemberData.userYear = request.userYear;
+  }
+  if (request.userPhoto) {
+    newMemberData.userPhoto = request.userPhoto;
   }
   
   batch.set(newMemberRef, newMemberData);
