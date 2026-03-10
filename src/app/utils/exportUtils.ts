@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { ClubMember } from '../services/databaseService';
+import { ClubMember } from '../services/clubService';
 
 /**
  * Export club members to CSV file

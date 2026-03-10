@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 
 export function Starfield() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationFrameIdRef = useRef<number>();
+  const isCleanedUpRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -10,8 +12,16 @@ export function Starfield() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Reset cleanup flag
+    isCleanedUpRef.current = false;
+
+    const setCanvasSize = () => {
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    setCanvasSize();
 
     const stars: Array<{ x: number; y: number; radius: number; opacity: number; speed: number }> = [];
     const starCount = 150;
@@ -26,9 +36,12 @@ export function Starfield() {
       });
     }
 
-    let animationFrameId: number;
-
     const animate = () => {
+      // Check if component was cleaned up
+      if (isCleanedUpRef.current) return;
+
+      if (!ctx || !canvas) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       stars.forEach((star) => {
@@ -43,20 +56,30 @@ export function Starfield() {
         ctx.fill();
       });
 
-      animationFrameId = requestAnimationFrame(animate);
+      if (!isCleanedUpRef.current) {
+        animationFrameIdRef.current = requestAnimationFrame(animate);
+      }
     };
 
     animate();
 
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      setCanvasSize();
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      // Set cleanup flag
+      isCleanedUpRef.current = true;
+
+      // Cancel animation frame
+      if (animationFrameIdRef.current !== undefined) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = undefined;
+      }
+
+      // Remove event listener
       window.removeEventListener('resize', handleResize);
     };
   }, []);

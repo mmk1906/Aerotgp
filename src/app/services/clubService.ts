@@ -210,12 +210,22 @@ export const getClubMembers = async (clubId: string): Promise<ClubMember[]> => {
   const q = query(
     membersRef,
     where('clubId', '==', clubId),
-    where('isActive', '==', true),
-    orderBy('isFeatured', 'desc'),
-    orderBy('joinedDate', 'desc')
+    where('isActive', '==', true)
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubMember));
+  const members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubMember));
+  
+  // Sort in JavaScript to avoid requiring a composite index
+  return members.sort((a, b) => {
+    // First sort by isFeatured (featured first)
+    if (a.isFeatured !== b.isFeatured) {
+      return a.isFeatured ? -1 : 1;
+    }
+    // Then by joinedDate (newest first)
+    const dateA = a.joinedDate?.seconds || 0;
+    const dateB = b.joinedDate?.seconds || 0;
+    return dateB - dateA;
+  });
 };
 
 export const getFeaturedMembers = async (clubId: string): Promise<ClubMember[]> => {
@@ -351,11 +361,17 @@ export const getPendingJoinRequests = async (): Promise<ClubJoinRequest[]> => {
   const requestsRef = collection(db, 'clubJoinRequests');
   const q = query(
     requestsRef,
-    where('status', '==', 'pending'),
-    orderBy('submittedAt', 'desc')
+    where('status', '==', 'pending')
   );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubJoinRequest));
+  const requests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubJoinRequest));
+  
+  // Sort in JavaScript to avoid requiring a composite index
+  return requests.sort((a, b) => {
+    const aTime = a.submittedAt?.seconds || 0;
+    const bTime = b.submittedAt?.seconds || 0;
+    return bTime - aTime; // descending order (newest first)
+  });
 };
 
 export const getUserJoinRequests = async (userId: string): Promise<ClubJoinRequest[]> => {
@@ -605,9 +621,38 @@ export const recalculateClubCounts = async (clubId: string): Promise<void> => {
 export const getClubProjects = async (clubId: string): Promise<ClubProject[]> => {
   try {
     const projectsRef = collection(db, 'clubProjects');
-    const q = query(projectsRef, where('clubId', '==', clubId), orderBy('startDate', 'desc'));
+    const q = query(projectsRef, where('clubId', '==', clubId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubProject));
+    const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubProject));
+    
+    // Sort by startDate in JavaScript to avoid requiring a composite index
+    return projects.sort((a, b) => {
+      // Handle Firestore Timestamp objects
+      let dateA = 0;
+      let dateB = 0;
+      
+      if (a.startDate) {
+        if (typeof a.startDate === 'object' && 'seconds' in a.startDate) {
+          dateA = a.startDate.seconds * 1000;
+        } else if (a.startDate instanceof Date) {
+          dateA = a.startDate.getTime();
+        } else if (typeof a.startDate === 'string') {
+          dateA = new Date(a.startDate).getTime();
+        }
+      }
+      
+      if (b.startDate) {
+        if (typeof b.startDate === 'object' && 'seconds' in b.startDate) {
+          dateB = b.startDate.seconds * 1000;
+        } else if (b.startDate instanceof Date) {
+          dateB = b.startDate.getTime();
+        } else if (typeof b.startDate === 'string') {
+          dateB = new Date(b.startDate).getTime();
+        }
+      }
+      
+      return dateB - dateA; // descending order (newest first)
+    });
   } catch (error) {
     console.error('Error fetching club projects:', error);
     return [];

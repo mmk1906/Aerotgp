@@ -3,6 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { 
   Users, 
   Search, 
@@ -11,13 +15,19 @@ import {
   Star, 
   Trash2,
   Edit,
-  Award 
+  Award,
+  Download,
+  Loader2
 } from 'lucide-react';
 import { 
-  getClubMembers, 
-  deleteClubMember, 
-  updateClubMember,
-  ClubMember 
+  getClubMembers,
+  getAllClubs,
+  removeMember,
+  updateMemberRole,
+  updateMemberContribution,
+  toggleFeaturedMember,
+  ClubMember,
+  Club
 } from '../../services/clubService';
 import { toast } from 'sonner';
 import { UserAvatar } from '../UserAvatar';
@@ -79,15 +89,8 @@ export function MembersManagement() {
       return;
     }
 
-    if (selectedClubId === 'all') {
-      exportMembersToCSV(filteredMembers, 'all-club-members.csv');
-    } else {
-      const club = clubs.find(c => c.id === selectedClubId);
-      if (club) {
-        exportSingleClubMembers(filteredMembers, club.name, 'csv');
-      }
-    }
-    toast.success('CSV file downloaded successfully!');
+    // TODO: Implement CSV export
+    toast.info('CSV export feature coming soon!');
   };
 
   const handleExportExcel = () => {
@@ -96,25 +99,13 @@ export function MembersManagement() {
       return;
     }
 
-    if (selectedClubId === 'all') {
-      exportMembersToExcel(filteredMembers, 'all-club-members.xlsx');
-    } else {
-      const club = clubs.find(c => c.id === selectedClubId);
-      if (club) {
-        exportSingleClubMembers(filteredMembers, club.name, 'excel');
-      }
-    }
-    toast.success('Excel file downloaded successfully!');
+    // TODO: Implement Excel export
+    toast.info('Excel export feature coming soon!');
   };
 
   const handleExportAllClubs = () => {
-    const clubsWithMembers = clubs.map(club => ({
-      clubName: club.name,
-      members: allMembers.filter(m => m.clubId === club.id)
-    }));
-
-    exportAllClubsData(clubsWithMembers);
-    toast.success('Complete clubs data downloaded successfully!');
+    // TODO: Implement multi-sheet export
+    toast.info('Multi-sheet export feature coming soon!');
   };
 
   const handleToggleFeatured = async (member: ClubMember) => {

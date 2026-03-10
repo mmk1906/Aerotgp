@@ -71,23 +71,7 @@ export function Faculty() {
         </motion.div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {filters.map((f) => (
-            <motion.button
-              key={f}
-              onClick={() => setFilter(f)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-6 py-2.5 rounded-full transition-all font-medium ${
-                filter === f
-                  ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/50'
-                  : 'bg-slate-800/50 backdrop-blur-sm text-gray-300 hover:bg-slate-700/50 border border-slate-700'
-              }`}
-            >
-              {f}
-            </motion.button>
-          ))}
-        </div>
+        
 
         {/* Loading State */}
         {loading ? (

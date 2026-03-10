@@ -4,7 +4,8 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { ArrowRight, Users, Award, Rocket, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getAllEvents, getAllClubs, Event, Club } from '../services/databaseService';
+import { getAllEvents, Event } from '../services/databaseService';
+import { getAllClubs, Club } from '../services/clubService';
 
 export function Home() {
   const [stats, setStats] = useState({

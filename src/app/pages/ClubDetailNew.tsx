@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, Link } from 'react-router';
 import { motion } from 'motion/react';
 import { 
   Calendar, 
@@ -16,7 +16,10 @@ import {
   Plus,
   Check,
   X,
-  Upload
+  Upload,
+  Rocket,
+  CheckCircle,
+  UserPlus
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -26,19 +29,21 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { 
   getClubBySlug, 
-  getClubMembers, 
+  getClubMembers,
+  getFeaturedMembers,
   getClubProjects,
-  getClubPhotos,
-  addClubMember,
-  removeClubMember,
   getUserClubMemberships,
+  isUserClubMember,
+  canUserJoinClub,
+  submitJoinRequest,
+  getUserJoinRequests,
   Club,
   ClubMember,
   ClubProject,
-  ClubPhoto,
-  uploadClubPhoto
+  ClubJoinRequest,
 } from '../services/clubService';
-import { getAllEvents, Event } from '../services/databaseService';
+import { getAllEvents, Event, GalleryItem, getApprovedGalleryPhotos } from '../services/databaseService';
+import { getUserProfile } from '../services/authService';
 import { Starfield } from '../components/Starfield';
 import { CloudinaryImageUploader } from '../components/CloudinaryImageUploader';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
@@ -54,7 +59,7 @@ export function ClubDetail() {
   const [featuredMembers, setFeaturedMembers] = useState<ClubMember[]>([]);
   const [coreMembers, setCoreMembers] = useState<ClubMember[]>([]);
   const [projects, setProjects] = useState<ClubProject[]>([]);
-  const [photos, setPhotos] = useState<ClubPhoto[]>([]);
+  const [photos, setPhotos] = useState<GalleryItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -86,38 +91,62 @@ export function ClubDetail() {
       const clubData = await getClubBySlug(slug!);
       if (!clubData) {
         toast.error('Club not found');
+        navigate('/clubs');
         return;
       }
 
       setClub(clubData);
 
-      // Load members
-      const [allMembers, featured] = await Promise.all([
-        getClubMembers(clubData.id!),
-        getFeaturedMembers(clubData.id!)
-      ]);
+      // Load members with error handling
+      try {
+        const [allMembers, featured] = await Promise.all([
+          getClubMembers(clubData.id!),
+          getFeaturedMembers(clubData.id!)
+        ]);
 
-      setMembers(allMembers);
-      setFeaturedMembers(featured);
+        setMembers(allMembers || []);
+        setFeaturedMembers(featured || []);
+        
+        // Load core members
+        const core = (allMembers || []).filter(member => member?.role === 'Core Member');
+        setCoreMembers(core);
+      } catch (memberError) {
+        console.error('Error fetching club members:', memberError);
+        setMembers([]);
+        setFeaturedMembers([]);
+        setCoreMembers([]);
+      }
 
-      // Load projects
-      const clubProjects = await getClubProjects(clubData.id!);
-      setProjects(clubProjects);
+      // Load projects with error handling
+      try {
+        const clubProjects = await getClubProjects(clubData.id!);
+        setProjects(clubProjects || []);
+      } catch (projectError: any) {
+        console.error('Error fetching club projects:', projectError);
+        setProjects([]);
+      }
 
-      // Load photos
-      const clubPhotos = await getClubPhotos(clubData.id!);
-      setPhotos(clubPhotos);
+      // Load photos with error handling
+      try {
+        const allPhotos = await getApprovedGalleryPhotos();
+        setPhotos(allPhotos || []);
+      } catch (photoError) {
+        console.error('Error fetching photos:', photoError);
+        setPhotos([]);
+      }
 
-      // Load events
-      const clubEvents = await getAllEvents(clubData.id!);
-      setEvents(clubEvents);
-
-      // Load core members
-      const core = allMembers.filter(member => member.role === 'Core Member');
-      setCoreMembers(core);
+      // Load events with error handling
+      try {
+        const allEvents = await getAllEvents();
+        setEvents(allEvents || []);
+      } catch (eventError) {
+        console.error('Error fetching events:', eventError);
+        setEvents([]);
+      }
     } catch (error) {
       console.error('Error loading club:', error);
       toast.error('Failed to load club details');
+      navigate('/clubs');
     } finally {
       setLoading(false);
     }
@@ -583,16 +612,16 @@ export function ClubDetail() {
                     >
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
-                          {project.logo ? (
-                            <img src={project.logo} alt={project.name} className="w-full h-full object-cover" />
+                          {project.imageUrl ? (
+                            <img src={project.imageUrl} alt={project.title || 'Project'} className="w-full h-full object-cover" />
                           ) : (
-                            project.name.charAt(0).toUpperCase()
+                            (project.title && project.title.charAt(0).toUpperCase()) || 'P'
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-lg mb-1">{project.name}</h4>
+                          <h4 className="font-semibold text-lg mb-1">{project.title || 'Untitled Project'}</h4>
                           <Badge variant="outline" className="mb-2 text-xs">
-                            {project.status}
+                            {project.status || 'Unknown'}
                           </Badge>
                           {project.description && (
                             <p className="text-sm text-gray-400 line-clamp-2">
@@ -636,15 +665,15 @@ export function ClubDetail() {
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
                           {photo.url ? (
-                            <img src={photo.url} alt={photo.description} className="w-full h-full object-cover" />
+                            <img src={photo.url} alt={photo.description || 'Photo'} className="w-full h-full object-cover" />
                           ) : (
-                            photo.description.charAt(0).toUpperCase()
+                            (photo.description && photo.description.charAt(0).toUpperCase()) || 'P'
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-lg mb-1">{photo.description}</h4>
+                          <h4 className="font-semibold text-lg mb-1">{photo.description || 'Untitled Photo'}</h4>
                           <Badge variant="outline" className="mb-2 text-xs">
-                            {photo.date}
+                            {photo.date || 'No date'}
                           </Badge>
                         </div>
                       </div>
@@ -683,15 +712,15 @@ export function ClubDetail() {
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
                           {event.logo ? (
-                            <img src={event.logo} alt={event.name} className="w-full h-full object-cover" />
+                            <img src={event.logo} alt={event.name || 'Event'} className="w-full h-full object-cover" />
                           ) : (
-                            event.name.charAt(0).toUpperCase()
+                            (event.name && event.name.charAt(0).toUpperCase()) || 'E'
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-lg mb-1">{event.name}</h4>
+                          <h4 className="font-semibold text-lg mb-1">{event.name || 'Untitled Event'}</h4>
                           <Badge variant="outline" className="mb-2 text-xs">
-                            {event.date}
+                            {event.date || 'No date'}
                           </Badge>
                           {event.description && (
                             <p className="text-sm text-gray-400 line-clamp-2">

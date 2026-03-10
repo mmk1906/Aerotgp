@@ -39,13 +39,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Listen to Firebase auth state changes
     const unsubscribe = onAuthStateChange(async (firebaseUser: FirebaseUser | null) => {
+      if (!isMounted) return;
+
       if (firebaseUser) {
         try {
           // Get user profile from Firestore
           const userProfile = await getUserProfile(firebaseUser.uid);
-          if (userProfile) {
+          if (userProfile && isMounted) {
             setUser({
               id: userProfile.id,
               name: userProfile.name,
@@ -59,15 +63,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          if (isMounted) {
+            console.error('Error fetching user profile:', error);
+          }
         }
       } else {
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
       }
-      setLoading(false);
+      
+      if (isMounted) {
+        setLoading(false);
+      }
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {

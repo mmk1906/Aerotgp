@@ -92,7 +92,6 @@ export function AdminSettings() {
       events: JSON.parse(localStorage.getItem('events') || '[]'),
       blogs: JSON.parse(localStorage.getItem('blogs') || '[]'),
       faculty: JSON.parse(localStorage.getItem('facultyMembers') || '[]'),
-      gallery: JSON.parse(localStorage.getItem('galleryPhotos') || '[]'),
       users: JSON.parse(localStorage.getItem('users') || '[]')
     };
 
@@ -358,7 +357,7 @@ export function AdminSettings() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete all events, blogs, gallery photos, and other data from the system.
+                                This action cannot be undone. This will permanently delete all events, blogs, faculty, and other data from the system.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

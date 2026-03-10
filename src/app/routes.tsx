@@ -9,7 +9,6 @@ import { ClubDetail } from './pages/ClubDetailNew';
 import { Academics } from './pages/Academics';
 import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
-import { Gallery } from './pages/Gallery';
 import { Login } from './pages/Login';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDashboardProtected } from './pages/AdminDashboardProtected';
@@ -62,7 +61,6 @@ export const router = createBrowserRouter([
           { path: 'academics', element: <Academics /> },
           { path: 'contact', element: <Contact /> },
           { path: 'events', element: <Events /> },
-          { path: 'gallery', element: <Gallery /> },
           { path: 'login', element: <Login /> },
           { path: 'admin', element: <AdminDashboardProtected /> },
         ],
@@ -78,6 +76,14 @@ export const router = createBrowserRouter([
           { path: 'tests', element: <PortalTests /> },
           { path: 'announcements', element: <PortalAnnouncements /> },
           { path: 'activity-history', element: <ActivityHistory /> },
+        ],
+      },
+      {
+        path: '/admin',
+        element: <ProtectedRoute />,
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: 'protected', element: <AdminDashboardProtected /> },
         ],
       },
     ],

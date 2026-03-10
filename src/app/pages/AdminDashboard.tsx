@@ -48,7 +48,6 @@ import { JoinRequestsManagement } from '../components/admin/JoinRequestsManageme
 import { MembersManagement } from '../components/admin/MembersManagement';
 import { EventCreateDialog } from '../components/EventCreateDialog';
 import { FacultyManagementTab } from '../components/FacultyManagementTab';
-import { PhotoGalleryManagement } from '../components/PhotoGalleryManagement';
 import { MessagesManagement } from '../components/MessagesManagement';
 import { WebsiteContentManagement } from '../components/WebsiteContentManagement';
 import { DataExportTab } from '../components/DataExportTab';
@@ -281,7 +280,7 @@ export function AdminDashboard() {
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">Welcome to the Admin Control Panel</h3>
                   <p className="text-sm text-gray-300 mb-3">
-                    You have full control over the website. Manage events, blogs, clubs, faculty, photo gallery, and website content - all without coding!
+                    You have full control over the website. Manage events, blogs, clubs, faculty, and website content - all without coding!
                   </p>
                   <div className="grid md:grid-cols-3 gap-4 text-sm">
                     <div className="flex items-start gap-2">
@@ -317,7 +316,6 @@ export function AdminDashboard() {
                 )}
               </TabsTrigger>
               <TabsTrigger value="faculty">Faculty</TabsTrigger>
-              <TabsTrigger value="gallery">Gallery</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="export">Export</TabsTrigger>
@@ -750,10 +748,6 @@ export function AdminDashboard() {
 
           <TabsContent value="faculty">
             <FacultyManagementTab />
-          </TabsContent>
-
-          <TabsContent value="gallery">
-            <PhotoGalleryManagement />
           </TabsContent>
 
           <TabsContent value="messages">
