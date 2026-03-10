@@ -27,6 +27,7 @@ import {
   ClubMember
 } from '../services/clubService';
 import { getUserProfile, UserProfile } from '../services/authService';
+import { UserAvatar } from '../components/UserAvatar';
 
 export function StudentDashboard() {
   const { user } = useAuth();
@@ -144,11 +145,19 @@ export function StudentDashboard() {
         className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="relative z-10">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name}! 👋</h1>
-          <p className="text-blue-100">
-            Here's your activity overview. Keep up the great work!
-          </p>
+        <div className="relative z-10 flex items-center gap-6">
+          <UserAvatar 
+            photoUrl={user?.profilePhoto} 
+            userName={user?.name || ''} 
+            size="xl" 
+            className="border-4 border-white/20"
+          />
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.name}! 👋</h1>
+            <p className="text-blue-100">
+              Here's your activity overview. Keep up the great work!
+            </p>
+          </div>
         </div>
       </motion.div>
 

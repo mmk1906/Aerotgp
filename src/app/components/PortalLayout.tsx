@@ -20,6 +20,7 @@ import { Button } from './ui/button';
 import { useAuth } from '../context/AuthContext';
 import { Starfield } from './Starfield';
 import { ScrollToTop } from './ScrollToTop';
+import { UserAvatar } from './UserAvatar';
 
 export function PortalLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true); // Default to open on desktop
@@ -82,8 +83,8 @@ export function PortalLayout() {
                 <span className="hidden md:inline">Public Site</span>
               </Button>
             </Link>
-            <div className="flex items-center space-x-2 px-2 sm:px-3 py-2 bg-gray-800/50 rounded-lg">
-              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-400" />
+            <div className="flex items-center space-x-2 px-2 sm:px-3 py-1.5 bg-gray-800/50 rounded-lg">
+              <UserAvatar photoUrl={user.profilePhoto} userName={user.name} size="xs" />
               <span className="text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-none">{user.name}</span>
             </div>
           </div>

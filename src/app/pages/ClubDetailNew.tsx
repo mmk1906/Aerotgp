@@ -1,36 +1,48 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { motion } from 'motion/react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import {
-  Rocket,
-  Users,
-  Calendar,
-  Star,
-  Award,
+import { 
+  Calendar, 
+  MapPin, 
+  User, 
+  Clock,
   ArrowLeft,
+  Users,
+  Trophy,
+  Star,
+  Mail,
   Loader2,
-  UserPlus,
-  CheckCircle,
-  Clock
+  Image as ImageIcon,
+  Plus,
+  Check,
+  X,
+  Upload
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useAuth } from '../context/AuthContext';
-import {
-  getClubBySlug,
-  getClubMembers,
-  getFeaturedMembers,
-  submitJoinRequest,
-  canUserJoinClub,
-  getUserJoinRequests,
-  isUserClubMember,
+import { toast } from 'sonner';
+import { 
+  getClubBySlug, 
+  getClubMembers, 
+  getClubProjects,
+  getClubPhotos,
+  addClubMember,
+  removeClubMember,
+  getUserClubMemberships,
   Club,
   ClubMember,
-  ClubJoinRequest
+  ClubProject,
+  ClubPhoto,
+  uploadClubPhoto
 } from '../services/clubService';
-import { getUserProfile } from '../services/authService';
+import { getAllEvents, Event } from '../services/databaseService';
+import { Starfield } from '../components/Starfield';
+import { CloudinaryImageUploader } from '../components/CloudinaryImageUploader';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { UserAvatar } from '../components/UserAvatar';
 
 export function ClubDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -40,6 +52,10 @@ export function ClubDetail() {
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
   const [featuredMembers, setFeaturedMembers] = useState<ClubMember[]>([]);
+  const [coreMembers, setCoreMembers] = useState<ClubMember[]>([]);
+  const [projects, setProjects] = useState<ClubProject[]>([]);
+  const [photos, setPhotos] = useState<ClubPhoto[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Join state
@@ -83,6 +99,22 @@ export function ClubDetail() {
 
       setMembers(allMembers);
       setFeaturedMembers(featured);
+
+      // Load projects
+      const clubProjects = await getClubProjects(clubData.id!);
+      setProjects(clubProjects);
+
+      // Load photos
+      const clubPhotos = await getClubPhotos(clubData.id!);
+      setPhotos(clubPhotos);
+
+      // Load events
+      const clubEvents = await getAllEvents(clubData.id!);
+      setEvents(clubEvents);
+
+      // Load core members
+      const core = allMembers.filter(member => member.role === 'Core Member');
+      setCoreMembers(core);
     } catch (error) {
       console.error('Error loading club:', error);
       toast.error('Failed to load club details');
@@ -395,13 +427,11 @@ export function ClubDetail() {
                       className="bg-slate-800/50 rounded-lg p-6 border border-slate-700"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
-                          {member.userPhoto ? (
-                            <img src={member.userPhoto} alt={member.userName} className="w-full h-full object-cover" />
-                          ) : (
-                            member.userName.charAt(0).toUpperCase()
-                          )}
-                        </div>
+                        <UserAvatar 
+                          photoUrl={member.userPhoto} 
+                          userName={member.userName} 
+                          size="xl"
+                        />
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-lg mb-1">{member.userName}</h4>
                           <Badge variant="outline" className="mb-2 text-xs">
@@ -414,6 +444,61 @@ export function ClubDetail() {
                           )}
                         </div>
                       </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Core Members */}
+        {coreMembers.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-12"
+          >
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <Star className="w-6 h-6 mr-2 text-yellow-500" />
+                  Core Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {coreMembers.map((member, index) => (
+                    <motion.div
+                      key={member.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="group"
+                    >
+                      <Card className="bg-gray-900/50 border-gray-800 backdrop-blur-sm hover:border-blue-500/50 transition-all h-full">
+                        <CardContent className="p-6">
+                          <div className="flex items-start gap-4">
+                            <UserAvatar 
+                              photoUrl={member.userPhoto} 
+                              userName={member.userName} 
+                              size="lg"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-lg mb-1">{member.userName}</h4>
+                              <Badge variant="outline" className="mb-2 text-xs">
+                                {member.role}
+                              </Badge>
+                              {member.contribution && (
+                                <p className="text-sm text-gray-400 line-clamp-2">
+                                  {member.contribution}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </motion.div>
                   ))}
                 </div>
@@ -449,12 +534,12 @@ export function ClubDetail() {
                       className="bg-slate-800/30 rounded-lg p-4 border border-slate-700/50 hover:border-slate-600 transition-colors"
                     >
                       <div className="flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold mb-3 overflow-hidden">
-                          {member.userPhoto ? (
-                            <img src={member.userPhoto} alt={member.userName} className="w-full h-full object-cover" />
-                          ) : (
-                            member.userName.charAt(0).toUpperCase()
-                          )}
+                        <div className="mb-3">
+                          <UserAvatar 
+                            photoUrl={member.userPhoto} 
+                            userName={member.userName} 
+                            size="lg"
+                          />
                         </div>
                         <h5 className="font-semibold text-sm mb-1">{member.userName}</h5>
                         <Badge variant="secondary" className="text-xs mb-1">
@@ -471,6 +556,157 @@ export function ClubDetail() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Projects */}
+        {projects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-12"
+          >
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <Trophy className="w-6 h-6 mr-2 text-yellow-500" />
+                  Projects
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {projects.map((project) => (
+                    <motion.div
+                      key={project.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-slate-800/50 rounded-lg p-6 border border-slate-700"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
+                          {project.logo ? (
+                            <img src={project.logo} alt={project.name} className="w-full h-full object-cover" />
+                          ) : (
+                            project.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-lg mb-1">{project.name}</h4>
+                          <Badge variant="outline" className="mb-2 text-xs">
+                            {project.status}
+                          </Badge>
+                          {project.description && (
+                            <p className="text-sm text-gray-400 line-clamp-2">
+                              {project.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Photos */}
+        {photos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-12"
+          >
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <ImageIcon className="w-6 h-6 mr-2 text-yellow-500" />
+                  Photos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {photos.map((photo) => (
+                    <motion.div
+                      key={photo.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-slate-800/50 rounded-lg p-6 border border-slate-700"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
+                          {photo.url ? (
+                            <img src={photo.url} alt={photo.description} className="w-full h-full object-cover" />
+                          ) : (
+                            photo.description.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-lg mb-1">{photo.description}</h4>
+                          <Badge variant="outline" className="mb-2 text-xs">
+                            {photo.date}
+                          </Badge>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Events */}
+        {events.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-12"
+          >
+            <Card className="bg-slate-900/50 backdrop-blur-sm border-slate-700">
+              <CardHeader>
+                <CardTitle className="flex items-center text-2xl">
+                  <Calendar className="w-6 h-6 mr-2 text-yellow-500" />
+                  Events
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-slate-800/50 rounded-lg p-6 border border-slate-700"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold flex-shrink-0 overflow-hidden">
+                          {event.logo ? (
+                            <img src={event.logo} alt={event.name} className="w-full h-full object-cover" />
+                          ) : (
+                            event.name.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-lg mb-1">{event.name}</h4>
+                          <Badge variant="outline" className="mb-2 text-xs">
+                            {event.date}
+                          </Badge>
+                          {event.description && (
+                            <p className="text-sm text-gray-400 line-clamp-2">
+                              {event.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   );

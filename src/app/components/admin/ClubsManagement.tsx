@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
 import { Rocket, Plus, Edit, Trash2, Loader2, Users, Image as ImageIcon } from 'lucide-react';
@@ -307,6 +307,9 @@ export function ClubsManagement() {
         <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingClub ? 'Edit Club' : 'Create New Club'}</DialogTitle>
+            <DialogDescription>
+              {editingClub ? 'Edit the details of an existing club.' : 'Create a new club.'}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">

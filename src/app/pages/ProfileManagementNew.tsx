@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { getUserProfile, updateUserProfile, UserProfile as AuthUserProfile, changePassword } from '../services/authService';
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { UserAvatar } from '../components/UserAvatar';
 
 interface ExtendedUserProfile extends AuthUserProfile {
   bio?: string;
@@ -296,22 +297,18 @@ export function ProfileManagement() {
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="relative inline-block mb-4">
-                  <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
-                    {uploadingImage ? (
+                  {uploadingImage ? (
+                    <div className="w-32 h-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                       <Loader2 className="w-12 h-12 text-white animate-spin" />
-                    ) : profile.profilePhoto ? (
-                      <img
-                        src={profile.profilePhoto}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      <User className="w-16 h-16 text-white" />
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <UserAvatar 
+                      photoUrl={profile.profilePhoto} 
+                      userName={profile.name} 
+                      size="xl" 
+                      className="w-32 h-32"
+                    />
+                  )}
                   {isEditing && (
                     <button
                       onClick={() => fileInputRef.current?.click()}

@@ -1,30 +1,26 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { toast } from 'sonner';
-import { Download, Users, Star, Trash2, Edit, Loader2 } from 'lucide-react';
-import {
-  getAllClubs,
-  getClubMembers,
-  toggleFeaturedMember,
-  updateMemberRole,
-  updateMemberContribution,
-  removeMember,
-  Club,
-  ClubMember
+import { Badge } from '../ui/badge';
+import { 
+  Users, 
+  Search, 
+  Filter, 
+  UserPlus, 
+  Star, 
+  Trash2,
+  Edit,
+  Award 
+} from 'lucide-react';
+import { 
+  getClubMembers, 
+  deleteClubMember, 
+  updateClubMember,
+  ClubMember 
 } from '../../services/clubService';
-import {
-  exportSingleClubMembers,
-  exportAllClubsData,
-  exportMembersToCSV,
-  exportMembersToExcel
-} from '../../utils/exportUtils';
+import { toast } from 'sonner';
+import { UserAvatar } from '../UserAvatar';
 
 export function MembersManagement() {
   const [clubs, setClubs] = useState<Club[]>([]);
@@ -305,13 +301,11 @@ export function MembersManagement() {
                 >
                   <div className="flex items-center gap-4 flex-1">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold flex-shrink-0 overflow-hidden">
-                      {member.userPhoto ? (
-                        <img src={member.userPhoto} alt={member.userName} className="w-full h-full object-cover" />
-                      ) : (
-                        member.userName.charAt(0).toUpperCase()
-                      )}
-                    </div>
+                    <UserAvatar 
+                      photoUrl={member.userPhoto} 
+                      userName={member.userName} 
+                      size="lg"
+                    />
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
@@ -373,6 +367,9 @@ export function MembersManagement() {
         <DialogContent className="bg-slate-900 border-slate-700">
           <DialogHeader>
             <DialogTitle>Edit Member</DialogTitle>
+            <DialogDescription>
+              Make changes to the member's details below.
+            </DialogDescription>
           </DialogHeader>
           {editingMember && (
             <div className="space-y-4">
