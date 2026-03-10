@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Badge } from './ui/badge';
 import { FileQuestion, Plus, Edit, Trash2, Eye, Clock, Target } from 'lucide-react';
@@ -260,6 +260,9 @@ export function QuizManagementTab() {
             <DialogTitle className="text-2xl text-white">
               {editingQuiz ? 'Edit Quiz' : 'Create New Quiz'}
             </DialogTitle>
+            <DialogDescription className="text-sm text-gray-400">
+              {editingQuiz ? 'Update the details of the quiz.' : 'Enter the details for the new quiz.'}
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6 mt-4">

@@ -105,7 +105,7 @@ export function AdminDashboard() {
         setRegistrations(regsData);
 
         // Fetch messages from database
-        const messagesData = await getCollection<ContactMessage>('messages');
+        const messagesData = await getCollection<ContactMessage>('contactMessages');
         setMessages(messagesData);
       } catch (error) {
         console.error('Error loading admin data:', error);

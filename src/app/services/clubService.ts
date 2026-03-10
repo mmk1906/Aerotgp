@@ -91,6 +91,39 @@ export interface ClubJoinRequest {
   updatedAt?: any;
 }
 
+export interface ClubProject {
+  id?: string;
+  clubId: string;
+  clubName?: string;
+  title: string;
+  description: string;
+  startDate: any;
+  endDate?: any;
+  status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+  teamSize?: number;
+  technologies?: string[];
+  imageUrl?: string;
+  createdBy?: string;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+export interface MemberProgress {
+  id?: string;
+  userId: string;
+  clubId: string;
+  userName?: string;
+  clubName?: string;
+  projectsCompleted: number;
+  tasksCompleted: number;
+  hoursContributed: number;
+  skillsLearned: string[];
+  achievements: string[];
+  lastActivityDate?: any;
+  createdAt?: any;
+  updatedAt?: any;
+}
+
 // ============================================================================
 // CLUBS CRUD
 // ============================================================================
@@ -563,4 +596,115 @@ export const recalculateClubCounts = async (clubId: string): Promise<void> => {
     featuredCount: featuredMembers.length,
     updatedAt: Timestamp.now(),
   });
+};
+
+// ============================================================================
+// CLUB PROJECTS
+// ============================================================================
+
+export const getClubProjects = async (clubId: string): Promise<ClubProject[]> => {
+  try {
+    const projectsRef = collection(db, 'clubProjects');
+    const q = query(projectsRef, where('clubId', '==', clubId), orderBy('startDate', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ClubProject));
+  } catch (error) {
+    console.error('Error fetching club projects:', error);
+    return [];
+  }
+};
+
+export const createClubProject = async (data: Omit<ClubProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  try {
+    const projectsRef = collection(db, 'clubProjects');
+    const projectData = {
+      ...data,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+    const docRef = await addDoc(projectsRef, projectData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating club project:', error);
+    throw new Error('Failed to create club project');
+  }
+};
+
+export const updateClubProject = async (projectId: string, data: Partial<ClubProject>): Promise<void> => {
+  try {
+    const projectRef = doc(db, 'clubProjects', projectId);
+    await updateDoc(projectRef, {
+      ...data,
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error updating club project:', error);
+    throw new Error('Failed to update club project');
+  }
+};
+
+export const deleteClubProject = async (projectId: string): Promise<void> => {
+  try {
+    const projectRef = doc(db, 'clubProjects', projectId);
+    await deleteDoc(projectRef);
+  } catch (error) {
+    console.error('Error deleting club project:', error);
+    throw new Error('Failed to delete club project');
+  }
+};
+
+// ============================================================================
+// MEMBER PROGRESS
+// ============================================================================
+
+export const getMemberProgressByUser = async (userId: string, clubId: string): Promise<MemberProgress[]> => {
+  try {
+    const progressRef = collection(db, 'memberProgress');
+    const q = query(
+      progressRef, 
+      where('userId', '==', userId),
+      where('clubId', '==', clubId)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MemberProgress));
+  } catch (error) {
+    console.error('Error fetching member progress:', error);
+    return [];
+  }
+};
+
+export const createMemberProgress = async (data: Omit<MemberProgress, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
+  try {
+    const progressRef = collection(db, 'memberProgress');
+    const progressData = {
+      ...data,
+      projectsCompleted: data.projectsCompleted || 0,
+      tasksCompleted: data.tasksCompleted || 0,
+      hoursContributed: data.hoursContributed || 0,
+      skillsLearned: data.skillsLearned || [],
+      achievements: data.achievements || [],
+      lastActivityDate: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+    const docRef = await addDoc(progressRef, progressData);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating member progress:', error);
+    throw new Error('Failed to create member progress');
+  }
+};
+
+export const updateMemberProgress = async (progressId: string, data: Partial<MemberProgress>): Promise<void> => {
+  try {
+    const progressRef = doc(db, 'memberProgress', progressId);
+    await updateDoc(progressRef, {
+      ...data,
+      lastActivityDate: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+  } catch (error) {
+    console.error('Error updating member progress:', error);
+    throw new Error('Failed to update member progress');
+  }
 };
