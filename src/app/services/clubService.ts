@@ -100,7 +100,9 @@ export interface ClubProject {
   startDate: any;
   endDate?: any;
   status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+  progress?: number; // Progress percentage 0-100
   teamSize?: number;
+  teamMembers?: string[]; // Array of user names
   technologies?: string[];
   imageUrl?: string;
   createdBy?: string;
@@ -344,6 +346,55 @@ export const removeMember = async (memberId: string): Promise<void> => {
   });
 
   await batch.commit();
+};
+
+// Sync user profile data across all club memberships
+export const syncUserProfileAcrossClubMemberships = async (
+  userId: string,
+  updates: {
+    userName?: string;
+    userPhoto?: string;
+    userPhone?: string;
+    userDepartment?: string;
+    userYear?: string;
+  }
+): Promise<void> => {
+  try {
+    // Get all club memberships for this user
+    const membersRef = collection(db, 'clubMembers');
+    const q = query(membersRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return; // No memberships to update
+    }
+
+    // Use batch to update all memberships atomically
+    const batch = writeBatch(db);
+    const now = Timestamp.now();
+
+    snapshot.docs.forEach(doc => {
+      const memberRef = doc.ref;
+      const updateData: any = {
+        updatedAt: now,
+      };
+
+      // Only update fields that are provided
+      if (updates.userName !== undefined) updateData.userName = updates.userName;
+      if (updates.userPhoto !== undefined) updateData.userPhoto = updates.userPhoto;
+      if (updates.userPhone !== undefined) updateData.userPhone = updates.userPhone;
+      if (updates.userDepartment !== undefined) updateData.userDepartment = updates.userDepartment;
+      if (updates.userYear !== undefined) updateData.userYear = updates.userYear;
+
+      batch.update(memberRef, updateData);
+    });
+
+    await batch.commit();
+    console.log(`Synced profile updates for user ${userId} across ${snapshot.docs.length} club memberships`);
+  } catch (error) {
+    console.error('Error syncing user profile across club memberships:', error);
+    throw error;
+  }
 };
 
 // ============================================================================

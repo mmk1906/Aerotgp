@@ -14,6 +14,7 @@ import { getUserProfile, updateUserProfile, UserProfile as AuthUserProfile, chan
 import { uploadToCloudinary } from '../services/cloudinaryService';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { UserAvatar } from '../components/UserAvatar';
+import { syncUserProfileAcrossClubMemberships } from '../services/clubService';
 
 interface ExtendedUserProfile extends AuthUserProfile {
   bio?: string;
@@ -91,13 +92,6 @@ export function ProfileManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Image size must be less than 5MB');
       return;
@@ -109,8 +103,17 @@ export function ProfileManagement() {
 
       const result = await uploadToCloudinary(file, 'profile');
       
-      setProfile({ ...profile, profilePhoto: result.secure_url });
-      toast.success('Image uploaded successfully!');
+      const newProfilePhoto = result.secure_url;
+      setProfile({ ...profile, profilePhoto: newProfilePhoto });
+      
+      // Update immediately in Firebase and context
+      await updateUserProfile(user!.id, { profilePhoto: newProfilePhoto });
+      await updateUser({ profilePhoto: newProfilePhoto });
+      
+      // Sync across club memberships
+      await syncUserProfileAcrossClubMemberships(user!.id, { userPhoto: newProfilePhoto });
+      
+      toast.success('Profile picture updated everywhere!');
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image');
@@ -145,6 +148,9 @@ export function ProfileManagement() {
         prn: profile.prn,
         profilePhoto: profile.profilePhoto,
       });
+
+      // Sync profile across club memberships
+      await syncUserProfileAcrossClubMemberships(user!.id, profile);
 
       toast.success('Profile updated successfully!');
       setIsEditing(false);

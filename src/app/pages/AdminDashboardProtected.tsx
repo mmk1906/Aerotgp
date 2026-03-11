@@ -1,10 +1,13 @@
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { AdminDashboard } from './AdminDashboard';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 export function AdminDashboardProtected() {
   return (
-    <ProtectedRoute requireAdmin={true}>
-      <AdminDashboard />
-    </ProtectedRoute>
+    <ErrorBoundary>
+      <ProtectedRoute requireAdmin={true}>
+        <AdminDashboard />
+      </ProtectedRoute>
+    </ErrorBoundary>
   );
 }

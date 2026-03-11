@@ -81,8 +81,10 @@ export function AdminDashboard() {
   });
 
   useEffect(() => {
+    console.log('AdminDashboard mounted');
     const loadData = async () => {
       try {
+        console.log('Loading admin data...');
         // Load applications from localStorage
         const storedApplications = localStorage.getItem('aeroClubApplications');
         if (storedApplications) {
@@ -97,14 +99,17 @@ export function AdminDashboard() {
 
         // Fetch events from database
         const eventsData = await getAllEvents();
+        console.log('Events loaded:', eventsData);
         setEvents(eventsData);
 
         // Fetch registrations from database
         const regsData = await getCollection<EventRegistration>('registrations');
+        console.log('Registrations loaded:', regsData);
         setRegistrations(regsData);
 
         // Fetch messages from database
         const messagesData = await getCollection<ContactMessage>('contactMessages');
+        console.log('Messages loaded:', messagesData);
         setMessages(messagesData);
       } catch (error) {
         console.error('Error loading admin data:', error);
@@ -117,8 +122,11 @@ export function AdminDashboard() {
 
   // Safety check - ProtectedRoute wrapper should prevent this
   if (!user) {
+    console.log('No user found in AdminDashboard');
     return null;
   }
+
+  console.log('Rendering AdminDashboard for user:', user);
 
   const stats = {
     totalStudents: 500,

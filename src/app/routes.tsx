@@ -10,18 +10,15 @@ import { Academics } from './pages/Academics';
 import { Contact } from './pages/Contact';
 import { Events } from './pages/Events';
 import { Login } from './pages/Login';
-import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminDashboardProtected } from './pages/AdminDashboardProtected';
 import { ProtectedPortalLayout } from './components/ProtectedPortalLayout';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { ProfileManagement } from './pages/ProfileManagementNew';
 import { MyEvents } from './pages/MyEvents';
 import { PortalTests } from './pages/PortalTests';
-import { MyClubs } from './pages/portal/MyClubs';
 import { MyClubsEnhanced } from './pages/portal/MyClubsEnhanced';
 import { PortalAnnouncements } from './pages/portal/Announcements';
 import { ActivityHistory } from './pages/portal/ActivityHistory';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import React from 'react';
 
 // Error Boundary Component
@@ -43,7 +40,7 @@ function ErrorBoundary({ error }: { error: Error }) {
   );
 }
 
-// Updated: 2026-03-09 - Cleaned up portal routes, removed unused sections
+// Updated: 2026-03-11 - Fixed admin route duplication issue
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
@@ -76,14 +73,6 @@ export const router = createBrowserRouter([
           { path: 'tests', element: <PortalTests /> },
           { path: 'announcements', element: <PortalAnnouncements /> },
           { path: 'activity-history', element: <ActivityHistory /> },
-        ],
-      },
-      {
-        path: '/admin',
-        element: <ProtectedRoute />,
-        children: [
-          { index: true, element: <AdminDashboard /> },
-          { path: 'protected', element: <AdminDashboardProtected /> },
         ],
       },
     ],
